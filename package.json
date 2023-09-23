@@ -1,0 +1,33 @@
+{
+  "name": "parking-api-nodejs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.ts",
+  "scripts": {
+    "migrate": "node-pg-migrate -m dist",
+    "start": "concurrently \"npx tsc --watch\" \"nodemon -q dist/server.js\"",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-async-errors": "^3.1.1",
+    "http-status-codes": "^2.3.0",
+    "node-pg-migrate": "^6.2.2",
+    "pg": "^8.11.3",
+    "pg-format": "^1.0.4"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.17",
+    "@types/jest": "^29.5.1",
+    "@types/node": "^20.1.7",
+    "@types/pg-format": "^1.0.2",
+    "concurrently": "^8.0.1",
+    "esm": "^3.2.25",
+    "jest": "^29.5.0",
+    "ts-jest": "^29.1.0",
+    "typescript": "^5.0.4"
+  }
+}

@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.down = exports.up = exports.shorthands = void 0;
 exports.shorthands = undefined;
 async function up(pgm) {
-  pgm.sql(`
+    pgm.sql(`
     CREATE TABLE users (
       id SERIAL PRIMARY KEY,
       username VARCHAR(255) UNIQUE NOT NULL,
@@ -18,7 +18,7 @@ async function up(pgm) {
 }
 exports.up = up;
 async function down(pgm) {
-  pgm.sql(`
+    pgm.sql(`
     DROP TABLE IF EXISTS users;
       `);
 }

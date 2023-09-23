@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 
 const register = async (req: Request, res: Response) => {
-  res.send("register user");
+  res.status(200).json("register user");
 };
 
 export { register };

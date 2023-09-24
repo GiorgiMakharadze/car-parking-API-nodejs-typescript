@@ -9,7 +9,7 @@ require("dotenv/config");
 const port = process.env.PORT || 5000;
 pool_1.default
     .connect({
-    host: "postgres16",
+    host: "postgres",
     port: 5432,
     database: "carparking",
     user: process.env.PGUSER,

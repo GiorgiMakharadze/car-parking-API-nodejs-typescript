@@ -24,6 +24,32 @@ class UserRepo {
     const { rows } = result || { rows: [] };
     return toCamelCase(rows)[0];
   }
+
+  static async incrementFailedLoginAttempts(userId: number) {
+    await pool.query(
+      `UPDATE users SET failed_login_attempts = failed_login_attempts + 1 WHERE id = $1;`,
+      [userId]
+    );
+  }
+
+  static async resetFailedLoginAttempts(userId: number) {
+    await pool.query(
+      `UPDATE users SET failed_login_attempts = 0 WHERE id = $1;`,
+      [userId]
+    );
+  }
+
+  static async updateChecksum(userId: number, checksum: string) {
+    await pool.query(`UPDATE users SET checksum = $1 WHERE id = $2;`, [
+      checksum,
+      /**
+       * @description I'am using "as any" here due to a TypeScript error indicating a type mismatch
+       * with the pg library that I'am using. The library accepts numbers for query parameters,
+       * but TypeScript expects strings.
+       */
+      userId as any,
+    ]);
+  }
 }
 
 export default UserRepo;

@@ -13,8 +13,8 @@ class UserRepo {
         const { rows } = result || { rows: [] };
         return (0, toCamelCase_1.default)(rows)[0];
     }
-    static async createUser(username, email, hashedPassword) {
-        const result = await pool_1.default.query(`INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING *;`, [username, email, hashedPassword]);
+    static async createUser(username, email, hashedPassword, securityQuestion, securityAnswer) {
+        const result = await pool_1.default.query(`INSERT INTO users (username, email, password, security_question, security_answer) VALUES ($1, $2, $3, $4, $5) RETURNING *;`, [username, email, hashedPassword, securityQuestion, securityAnswer]);
         const { rows } = result || { rows: [] };
         return (0, toCamelCase_1.default)(rows)[0];
     }
@@ -45,6 +45,17 @@ class UserRepo {
         const result = await pool_1.default.query(`SELECT * FROM users WHERE refresh_token = $1;`, [refreshToken]);
         const { rows } = result || { rows: [] };
         return (0, toCamelCase_1.default)(rows)[0];
+    }
+    static async findByUsername(username) {
+        const result = await pool_1.default.query(`SELECT * FROM users WHERE username = $1;`, [username]);
+        const { rows } = result || { rows: [] };
+        return (0, toCamelCase_1.default)(rows)[0];
+    }
+    static async updatePassword(userId, hashedPassword) {
+        await pool_1.default.query(`UPDATE users SET password = $1 WHERE id = $2;`, [
+            hashedPassword,
+            userId,
+        ]);
     }
 }
 exports.default = UserRepo;

@@ -19,7 +19,8 @@ const MAX_LOGIN_ATTEMPTS =
   parseInt(process.env.MAX_LOGIN_ATTEMPTS as string) || 3;
 
 const register = async (req: Request, res: Response) => {
-  const { username, email, password } = req.body;
+  const { username, email, password, securityQuestion, securityAnswer } =
+    req.body;
 
   if (!username || !validator.isEmail(email) || !password) {
     return res.status(StatusCodes.BAD_REQUEST).json({ msg: "Invalid input" });
@@ -38,9 +39,21 @@ const register = async (req: Request, res: Response) => {
       .json({ msg: "User already exists" });
   }
 
+  if (!securityQuestion || !securityAnswer) {
+    return res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ msg: "Security question and answer are required" });
+  }
+
   const hashedPassword = await bcrypt.hash(password, 12);
 
-  const user = await UserRepo.createUser(username, email, hashedPassword);
+  const user = await UserRepo.createUser(
+    username,
+    email,
+    hashedPassword,
+    securityQuestion,
+    securityAnswer
+  );
 
   res.status(StatusCodes.CREATED).json(user);
 };
@@ -100,6 +113,38 @@ const logIn = async (req: Request, res: Response) => {
   res.status(StatusCodes.OK).json({ token });
 };
 
+const resetPassword = async (req: Request, res: Response) => {
+  const { email, securityAnswer, newPassword } = req.body;
+
+  if (!email || !securityAnswer || !newPassword) {
+    return res.status(StatusCodes.BAD_REQUEST).json({ msg: "Invalid input" });
+  }
+
+  if (!passwordStrength(newPassword)) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      msg: "Weak password. It should be at least 10 characters long, contain a number and a special character.",
+    });
+  }
+
+  const user = await UserRepo.findByEmail(email);
+  if (!user) {
+    return res.status(StatusCodes.NOT_FOUND).json({ msg: "User not found" });
+  }
+
+  if (user.securityAnswer !== securityAnswer) {
+    return res
+      .status(StatusCodes.UNAUTHORIZED)
+      .json({ msg: "Invalid security answer" });
+  }
+
+  const hashedPassword = await bcrypt.hash(newPassword, 12);
+  await UserRepo.updatePassword(user.id, hashedPassword);
+
+  await UserRepo.resetFailedLoginAttempts(user.id);
+
+  res.status(StatusCodes.OK).json({ msg: "Password reset successfully" });
+};
+
 const refreshTokenHandler = async (req: Request, res: Response) => {
   const { refreshToken } = req.cookies;
 
@@ -144,4 +189,4 @@ const refreshTokenHandler = async (req: Request, res: Response) => {
   res.status(StatusCodes.OK).json({ token: newAccessToken });
 };
 
-export { register, logIn, refreshTokenHandler };
+export { register, logIn, refreshTokenHandler, resetPassword };

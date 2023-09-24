@@ -14,11 +14,13 @@ class UserRepo {
   static async createUser(
     username: string,
     email: string,
-    hashedPassword: string
+    hashedPassword: string,
+    securityQuestion: string,
+    securityAnswer: string
   ) {
     const result = await pool.query(
-      `INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING *;`,
-      [username, email, hashedPassword]
+      `INSERT INTO users (username, email, password, security_question, security_answer) VALUES ($1, $2, $3, $4, $5) RETURNING *;`,
+      [username, email, hashedPassword, securityQuestion, securityAnswer]
     );
 
     const { rows } = result || { rows: [] };
@@ -68,6 +70,22 @@ class UserRepo {
     );
     const { rows } = result || { rows: [] };
     return toCamelCase(rows)[0];
+  }
+
+  static async findByUsername(username: string) {
+    const result = await pool.query(
+      `SELECT * FROM users WHERE username = $1;`,
+      [username]
+    );
+    const { rows } = result || { rows: [] };
+    return toCamelCase(rows)[0];
+  }
+
+  static async updatePassword(userId: number, hashedPassword: string) {
+    await pool.query(`UPDATE users SET password = $1 WHERE id = $2;`, [
+      hashedPassword,
+      userId as any,
+    ]);
   }
 }
 

@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.refreshTokenHandler = exports.logIn = exports.register = void 0;
+exports.resetPassword = exports.refreshTokenHandler = exports.logIn = exports.register = void 0;
 const http_status_codes_1 = require("http-status-codes");
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const validator_1 = __importDefault(require("validator"));
@@ -20,7 +20,7 @@ if (!privateKeyPEM) {
 }
 const MAX_LOGIN_ATTEMPTS = parseInt(process.env.MAX_LOGIN_ATTEMPTS) || 3;
 const register = async (req, res) => {
-    const { username, email, password } = req.body;
+    const { username, email, password, securityQuestion, securityAnswer } = req.body;
     if (!username || !validator_1.default.isEmail(email) || !password) {
         return res.status(http_status_codes_1.StatusCodes.BAD_REQUEST).json({ msg: "Invalid input" });
     }
@@ -35,8 +35,13 @@ const register = async (req, res) => {
             .status(http_status_codes_1.StatusCodes.CONFLICT)
             .json({ msg: "User already exists" });
     }
+    if (!securityQuestion || !securityAnswer) {
+        return res
+            .status(http_status_codes_1.StatusCodes.BAD_REQUEST)
+            .json({ msg: "Security question and answer are required" });
+    }
     const hashedPassword = await bcrypt_1.default.hash(password, 12);
-    const user = await userAuthRepo_1.default.createUser(username, email, hashedPassword);
+    const user = await userAuthRepo_1.default.createUser(username, email, hashedPassword, securityQuestion, securityAnswer);
     res.status(http_status_codes_1.StatusCodes.CREATED).json(user);
 };
 exports.register = register;
@@ -85,6 +90,31 @@ const logIn = async (req, res) => {
     res.status(http_status_codes_1.StatusCodes.OK).json({ token });
 };
 exports.logIn = logIn;
+const resetPassword = async (req, res) => {
+    const { email, securityAnswer, newPassword } = req.body;
+    if (!email || !securityAnswer || !newPassword) {
+        return res.status(http_status_codes_1.StatusCodes.BAD_REQUEST).json({ msg: "Invalid input" });
+    }
+    if (!(0, passwordStrenght_1.passwordStrength)(newPassword)) {
+        return res.status(http_status_codes_1.StatusCodes.BAD_REQUEST).json({
+            msg: "Weak password. It should be at least 10 characters long, contain a number and a special character.",
+        });
+    }
+    const user = await userAuthRepo_1.default.findByEmail(email);
+    if (!user) {
+        return res.status(http_status_codes_1.StatusCodes.NOT_FOUND).json({ msg: "User not found" });
+    }
+    if (user.securityAnswer !== securityAnswer) {
+        return res
+            .status(http_status_codes_1.StatusCodes.UNAUTHORIZED)
+            .json({ msg: "Invalid security answer" });
+    }
+    const hashedPassword = await bcrypt_1.default.hash(newPassword, 12);
+    await userAuthRepo_1.default.updatePassword(user.id, hashedPassword);
+    await userAuthRepo_1.default.resetFailedLoginAttempts(user.id);
+    res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "Password reset successfully" });
+};
+exports.resetPassword = resetPassword;
 const refreshTokenHandler = async (req, res) => {
     const { refreshToken } = req.cookies;
     if (!refreshToken) {

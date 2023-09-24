@@ -50,6 +50,22 @@ class UserRepo {
       userId as any,
     ]);
   }
+
+  static async saveRefreshToken(userId: number, refreshToken: string | null) {
+    await pool.query(`UPDATE users SET refresh_token = $1 WHERE id = $2;`, [
+      refreshToken,
+      userId as any,
+    ]);
+  }
+
+  static async findByRefreshToken(refreshToken: string) {
+    const result = await pool.query(
+      `SELECT * FROM users WHERE refresh_token = $1;`,
+      [refreshToken]
+    );
+    const { rows } = result || { rows: [] };
+    return toCamelCase(rows)[0];
+  }
 }
 
 export default UserRepo;

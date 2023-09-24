@@ -6,7 +6,6 @@ import { V2 as paseto } from "paseto";
 import { generateKeyPairSync } from "crypto";
 import crypto from "crypto";
 import "dotenv/config";
-
 import UserRepo from "../repos/userAuthRepo";
 import { passwordStrength } from "../utils/passwordStrenght";
 
@@ -80,12 +79,63 @@ const logIn = async (req: Request, res: Response) => {
 
   const token = await paseto.sign({ userId: user.id, checksum }, privateKeyPEM);
 
+  const refreshToken = crypto.randomBytes(64).toString("hex");
+  await UserRepo.saveRefreshToken(user.id, refreshToken);
+
   res.cookie("token", token, {
     expires: new Date(Date.now() + 3 * 60 * 60 * 1000),
     secure: process.env.NODE_ENV === "production",
     httpOnly: true,
   });
 
+  res.cookie("refreshToken", refreshToken, {
+    expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    secure: process.env.NODE_ENV === "production",
+    httpOnly: true,
+  });
   res.status(StatusCodes.OK).json({ token });
 };
-export { register, logIn };
+
+const refreshTokenHandler = async (req: Request, res: Response) => {
+  const { refreshToken } = req.cookies;
+
+  if (!refreshToken) {
+    return res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ msg: "No refresh token provided" });
+  }
+
+  const user = await UserRepo.findByRefreshToken(refreshToken);
+  if (
+    !user ||
+    !user.refreshTokenExpiresAt ||
+    new Date() > user.refreshTokenExpiresAt
+  ) {
+    return res
+      .status(StatusCodes.UNAUTHORIZED)
+      .json({ msg: "Invalid or expired refresh token" });
+  }
+
+  await UserRepo.saveRefreshToken(user.id, null);
+
+  const checksum = crypto
+    .createHash("sha256")
+    .update(JSON.stringify(user))
+    .digest("hex");
+  const newAccessToken = await paseto.sign(
+    { userId: user.id, checksum },
+    privateKeyPEM
+  );
+  const newRefreshToken = crypto.randomBytes(64).toString("hex");
+  await UserRepo.saveRefreshToken(user.id, newRefreshToken);
+
+  res.cookie("refreshToken", newRefreshToken, {
+    expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    secure: process.env.NODE_ENV === "production",
+    httpOnly: true,
+  });
+
+  res.status(StatusCodes.OK).json({ token: newAccessToken });
+};
+
+export { register, logIn, refreshTokenHandler };

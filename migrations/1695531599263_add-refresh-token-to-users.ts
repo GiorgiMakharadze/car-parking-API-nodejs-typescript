@@ -5,22 +5,17 @@ export const shorthands: ColumnDefinitions | undefined = undefined;
 
 export async function up(pgm: MigrationBuilder): Promise<void> {
   pgm.addColumn("users", {
-    failed_login_attempts: {
-      type: "INT",
-      notNull: true,
-      default: 0,
+    refresh_token: {
+      type: "VARCHAR(255)",
+      notNull: false,
     },
-  });
-
-  pgm.addColumn("users", {
-    checksum: {
-      type: "VARCHAR(64)",
+    refresh_token_expires_at: {
+      type: "TIMESTAMP",
       notNull: false,
     },
   });
 }
 
 export async function down(pgm: MigrationBuilder): Promise<void> {
-  pgm.dropColumn("users", "checksum");
-  pgm.dropColumn("users", "failed_login_attempts");
+  pgm.dropColumns("users", ["refresh_token", "refresh_token_expires_at"]);
 }

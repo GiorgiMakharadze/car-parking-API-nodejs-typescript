@@ -47,12 +47,20 @@ const register = async (req: Request, res: Response) => {
 
   const hashedPassword = await bcrypt.hash(password, 12);
 
+  let role = "user";
+  const totalUsers = await UserRepo.countUsers();
+  if (totalUsers === 0) {
+    role = "admin";
+  }
+
+  console.log("Inserting Email:", email);
   const user = await UserRepo.createUser(
     username,
     email,
     hashedPassword,
     securityQuestion,
-    securityAnswer
+    securityAnswer,
+    role
   );
 
   res.status(StatusCodes.CREATED).json(user);

@@ -41,7 +41,13 @@ const register = async (req, res) => {
             .json({ msg: "Security question and answer are required" });
     }
     const hashedPassword = await bcrypt_1.default.hash(password, 12);
-    const user = await userAuthRepo_1.default.createUser(username, email, hashedPassword, securityQuestion, securityAnswer);
+    let role = "user";
+    const totalUsers = await userAuthRepo_1.default.countUsers();
+    if (totalUsers === 0) {
+        role = "admin";
+    }
+    console.log("Inserting Email:", email);
+    const user = await userAuthRepo_1.default.createUser(username, email, hashedPassword, securityQuestion, securityAnswer, role);
     res.status(http_status_codes_1.StatusCodes.CREATED).json(user);
 };
 exports.register = register;

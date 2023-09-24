@@ -22,15 +22,21 @@ class UserRepo {
     email: string,
     hashedPassword: string,
     securityQuestion: string,
-    securityAnswer: string
+    securityAnswer: string,
+    role: string
   ) {
     const result = await pool.query(
-      `INSERT INTO users (username, email, password, security_question, security_answer) VALUES ($1, $2, $3, $4, $5) RETURNING *;`,
-      [username, email, hashedPassword, securityQuestion, securityAnswer]
+      `INSERT INTO users (username, email, password, security_question, security_answer, role) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;`,
+      [username, email, hashedPassword, securityQuestion, securityAnswer, role]
     );
 
     const { rows } = result || { rows: [] };
     return toCamelCase(rows)[0];
+  }
+
+  static async countUsers() {
+    const result = await pool.query("SELECT COUNT(*) FROM users;");
+    return parseInt(result?.rows[0].count);
   }
 
   static async incrementFailedLoginAttempts(userId: number) {

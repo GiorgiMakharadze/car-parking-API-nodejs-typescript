@@ -18,10 +18,14 @@ class UserRepo {
         const { rows } = result || { rows: [] };
         return (0, toCamelCase_1.default)(rows)[0];
     }
-    static async createUser(username, email, hashedPassword, securityQuestion, securityAnswer) {
-        const result = await pool_1.default.query(`INSERT INTO users (username, email, password, security_question, security_answer) VALUES ($1, $2, $3, $4, $5) RETURNING *;`, [username, email, hashedPassword, securityQuestion, securityAnswer]);
+    static async createUser(username, email, hashedPassword, securityQuestion, securityAnswer, role) {
+        const result = await pool_1.default.query(`INSERT INTO users (username, email, password, security_question, security_answer, role) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;`, [username, email, hashedPassword, securityQuestion, securityAnswer, role]);
         const { rows } = result || { rows: [] };
         return (0, toCamelCase_1.default)(rows)[0];
+    }
+    static async countUsers() {
+        const result = await pool_1.default.query("SELECT COUNT(*) FROM users;");
+        return parseInt(result === null || result === void 0 ? void 0 : result.rows[0].count);
     }
     static async incrementFailedLoginAttempts(userId) {
         await pool_1.default.query(`UPDATE users SET failed_login_attempts = failed_login_attempts + 1 WHERE id = $1;`, [userId]);

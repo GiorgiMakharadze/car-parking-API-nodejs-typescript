@@ -6,6 +6,7 @@ import {
   logIn,
   refreshTokenHandler,
   resetPassword,
+  logOut,
 } from "../controllers/authController";
 
 const router = Router();
@@ -18,9 +19,8 @@ const router = Router();
 
 router.route("/register").post(register);
 router.route("/login").post(logIn);
-router.post("/reset-password", resetPassword);
-
-router.route("/logout").get();
+router.route("/reset-password").post(resetPassword);
+router.route("/logout").get(logOut);
 
 router.route("/refresh-token").post(refreshTokenHandler);
 

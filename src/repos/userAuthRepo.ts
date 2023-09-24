@@ -1,6 +1,12 @@
 import toCamelCase from "../utils/toCamelCase";
 import pool from "../pool";
 
+/**
+ * @description In the following methods, we use "as any" due to a TypeScript error.
+ * The pg library accepts numbers for query parameters, but TypeScript expects strings.
+ * This type assertion is necessary to align the data types with the library's expectations.
+ */
+
 class UserRepo {
   static async findByEmail(email: string) {
     const result = await pool.query(`SELECT * FROM users WHERE email = $1;`, [
@@ -44,11 +50,6 @@ class UserRepo {
   static async updateChecksum(userId: number, checksum: string) {
     await pool.query(`UPDATE users SET checksum = $1 WHERE id = $2;`, [
       checksum,
-      /**
-       * @description I'am using "as any" here due to a TypeScript error indicating a type mismatch
-       * with the pg library that I'am using. The library accepts numbers for query parameters,
-       * but TypeScript expects strings.
-       */
       userId as any,
     ]);
   }
@@ -86,6 +87,13 @@ class UserRepo {
       hashedPassword,
       userId as any,
     ]);
+  }
+
+  static async invalidateRefreshToken(userId: number) {
+    await pool.query(
+      `UPDATE users SET refresh_token = NULL, refresh_token_expires_at = NULL WHERE id = $1;`,
+      [userId as any]
+    );
   }
 }
 

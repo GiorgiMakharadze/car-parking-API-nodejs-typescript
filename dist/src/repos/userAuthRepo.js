@@ -5,6 +5,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const toCamelCase_1 = __importDefault(require("../utils/toCamelCase"));
 const pool_1 = __importDefault(require("../pool"));
+/**
+ * @description In the following methods, we use "as any" due to a TypeScript error.
+ * The pg library accepts numbers for query parameters, but TypeScript expects strings.
+ * This type assertion is necessary to align the data types with the library's expectations.
+ */
 class UserRepo {
     static async findByEmail(email) {
         const result = await pool_1.default.query(`SELECT * FROM users WHERE email = $1;`, [
@@ -27,11 +32,6 @@ class UserRepo {
     static async updateChecksum(userId, checksum) {
         await pool_1.default.query(`UPDATE users SET checksum = $1 WHERE id = $2;`, [
             checksum,
-            /**
-             * @description I'am using "as any" here due to a TypeScript error indicating a type mismatch
-             * with the pg library that I'am using. The library accepts numbers for query parameters,
-             * but TypeScript expects strings.
-             */
             userId,
         ]);
     }
@@ -56,6 +56,9 @@ class UserRepo {
             hashedPassword,
             userId,
         ]);
+    }
+    static async invalidateRefreshToken(userId) {
+        await pool_1.default.query(`UPDATE users SET refresh_token = NULL, refresh_token_expires_at = NULL WHERE id = $1;`, [userId]);
     }
 }
 exports.default = UserRepo;

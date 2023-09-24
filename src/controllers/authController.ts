@@ -189,4 +189,28 @@ const refreshTokenHandler = async (req: Request, res: Response) => {
   res.status(StatusCodes.OK).json({ token: newAccessToken });
 };
 
-export { register, logIn, refreshTokenHandler, resetPassword };
+const logOut = async (req: Request, res: Response) => {
+  const { refreshToken } = req.cookies;
+
+  if (!refreshToken) {
+    return res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ msg: "No refresh token provided" });
+  }
+
+  const user = await UserRepo.findByRefreshToken(refreshToken);
+  if (!user) {
+    return res
+      .status(StatusCodes.UNAUTHORIZED)
+      .json({ msg: "Invalid refresh token" });
+  }
+
+  await UserRepo.invalidateRefreshToken(user.id);
+
+  res.clearCookie("token");
+  res.clearCookie("refreshToken");
+
+  return res.status(StatusCodes.OK).json({ msg: "Logged out successfully" });
+};
+
+export { register, logIn, refreshTokenHandler, resetPassword, logOut };

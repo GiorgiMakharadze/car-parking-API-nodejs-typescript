@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.resetPassword = exports.refreshTokenHandler = exports.logIn = exports.register = void 0;
+exports.logOut = exports.resetPassword = exports.refreshTokenHandler = exports.logIn = exports.register = void 0;
 const http_status_codes_1 = require("http-status-codes");
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const validator_1 = __importDefault(require("validator"));
@@ -149,3 +149,22 @@ const refreshTokenHandler = async (req, res) => {
     res.status(http_status_codes_1.StatusCodes.OK).json({ token: newAccessToken });
 };
 exports.refreshTokenHandler = refreshTokenHandler;
+const logOut = async (req, res) => {
+    const { refreshToken } = req.cookies;
+    if (!refreshToken) {
+        return res
+            .status(http_status_codes_1.StatusCodes.BAD_REQUEST)
+            .json({ msg: "No refresh token provided" });
+    }
+    const user = await userAuthRepo_1.default.findByRefreshToken(refreshToken);
+    if (!user) {
+        return res
+            .status(http_status_codes_1.StatusCodes.UNAUTHORIZED)
+            .json({ msg: "Invalid refresh token" });
+    }
+    await userAuthRepo_1.default.invalidateRefreshToken(user.id);
+    res.clearCookie("token");
+    res.clearCookie("refreshToken");
+    return res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "Logged out successfully" });
+};
+exports.logOut = logOut;

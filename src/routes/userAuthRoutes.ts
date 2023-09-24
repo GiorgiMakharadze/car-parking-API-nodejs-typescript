@@ -19,6 +19,6 @@ router.route("/register").post(apiLimiter, register);
 router.route("/login").post(apiLimiter, logIn);
 router.route("/logout").get();
 
-router.route("/token").post(apiLimiter, refreshTokenHandler);
+router.route("/refresh-token").post(apiLimiter, refreshTokenHandler);
 
 export default router;

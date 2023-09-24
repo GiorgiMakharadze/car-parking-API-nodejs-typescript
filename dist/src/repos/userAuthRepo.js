@@ -28,12 +28,23 @@ class UserRepo {
         await pool_1.default.query(`UPDATE users SET checksum = $1 WHERE id = $2;`, [
             checksum,
             /**
-             * @description I am using "as any" here due to a TypeScript error indicating a type mismatch
-             * with the pg library. The library accepts numbers for query parameters,
+             * @description I'am using "as any" here due to a TypeScript error indicating a type mismatch
+             * with the pg library that I'am using. The library accepts numbers for query parameters,
              * but TypeScript expects strings.
              */
             userId,
         ]);
+    }
+    static async saveRefreshToken(userId, refreshToken) {
+        const expiryDate = refreshToken
+            ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+            : null;
+        await pool_1.default.query(`UPDATE users SET refresh_token = $1, refresh_token_expires_at = $2 WHERE id = $3;`, [refreshToken, expiryDate, userId]);
+    }
+    static async findByRefreshToken(refreshToken) {
+        const result = await pool_1.default.query(`SELECT * FROM users WHERE refresh_token = $1;`, [refreshToken]);
+        const { rows } = result || { rows: [] };
+        return (0, toCamelCase_1.default)(rows)[0];
     }
 }
 exports.default = UserRepo;

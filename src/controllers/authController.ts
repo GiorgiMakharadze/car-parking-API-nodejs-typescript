@@ -11,6 +11,10 @@ import { passwordStrength } from "../utils/passwordStrenght";
 
 const { privateKey } = generateKeyPairSync("ed25519");
 const privateKeyPEM = privateKey.export({ type: "pkcs8", format: "pem" });
+if (!privateKeyPEM) {
+  throw new Error("Private key is not set");
+}
+
 const MAX_LOGIN_ATTEMPTS =
   parseInt(process.env.MAX_LOGIN_ATTEMPTS as string) || 3;
 
@@ -106,14 +110,16 @@ const refreshTokenHandler = async (req: Request, res: Response) => {
   }
 
   const user = await UserRepo.findByRefreshToken(refreshToken);
-  if (
-    !user ||
-    !user.refreshTokenExpiresAt ||
-    new Date() > user.refreshTokenExpiresAt
-  ) {
+  if (!user) {
     return res
       .status(StatusCodes.UNAUTHORIZED)
-      .json({ msg: "Invalid or expired refresh token" });
+      .json({ msg: "Invalid refresh token" });
+  }
+
+  if (new Date() > user.refreshTokenExpiresAt) {
+    return res
+      .status(StatusCodes.UNAUTHORIZED)
+      .json({ msg: "Refresh token has expired" });
   }
 
   await UserRepo.saveRefreshToken(user.id, null);

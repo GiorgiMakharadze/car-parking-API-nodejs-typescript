@@ -52,10 +52,13 @@ class UserRepo {
   }
 
   static async saveRefreshToken(userId: number, refreshToken: string | null) {
-    await pool.query(`UPDATE users SET refresh_token = $1 WHERE id = $2;`, [
-      refreshToken,
-      userId as any,
-    ]);
+    const expiryDate = refreshToken
+      ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+      : null;
+    await pool.query(
+      `UPDATE users SET refresh_token = $1, refresh_token_expires_at = $2 WHERE id = $3;`,
+      [refreshToken, expiryDate, userId as any]
+    );
   }
 
   static async findByRefreshToken(refreshToken: string) {

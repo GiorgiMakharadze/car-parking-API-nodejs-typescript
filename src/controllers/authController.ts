@@ -9,11 +9,12 @@ import "dotenv/config";
 import UserRepo from "../repos/userAuthRepo";
 import { passwordStrength } from "../utils/passwordStrenght";
 
-const { privateKey } = generateKeyPairSync("ed25519");
+const { privateKey, publicKey } = generateKeyPairSync("ed25519");
 const privateKeyPEM = privateKey.export({ type: "pkcs8", format: "pem" });
 if (!privateKeyPEM) {
   throw new Error("Private key is not set");
 }
+export const publicKeyPEM = publicKey.export({ type: "spki", format: "pem" });
 
 const MAX_LOGIN_ATTEMPTS =
   parseInt(process.env.MAX_LOGIN_ATTEMPTS as string) || 3;
@@ -109,9 +110,14 @@ const logIn = async (req: Request, res: Response) => {
 
   await UserRepo.resetFailedLoginAttempts(user.id);
 
+  const checksumData = {
+    id: user.id,
+    username: user.username,
+    email: user.email,
+  };
   const checksum = crypto
     .createHash("sha256")
-    .update(JSON.stringify(user))
+    .update(JSON.stringify(checksumData))
     .digest("hex");
   await UserRepo.updateChecksum(user.id, checksum);
 
@@ -168,6 +174,19 @@ const resetPassword = async (req: Request, res: Response) => {
   const hashedPassword = await bcrypt.hash(newPassword, 12);
   await UserRepo.updatePassword(user.id, hashedPassword);
   await UserRepo.resetFailedLoginAttempts(user.id);
+
+  // Add the checksum update code here
+  const updatedUser = await UserRepo.findById(user.id); // Fetch the updated user data
+  const updatedChecksumData = {
+    id: updatedUser?.id,
+    username: updatedUser?.username,
+    email: updatedUser?.email,
+  };
+  const updatedChecksum = crypto
+    .createHash("sha256")
+    .update(JSON.stringify(updatedChecksumData))
+    .digest("hex");
+  await UserRepo.updateChecksum(user.id, updatedChecksum);
 
   res.status(StatusCodes.OK).json({ msg: "Password reset successfully" });
 };

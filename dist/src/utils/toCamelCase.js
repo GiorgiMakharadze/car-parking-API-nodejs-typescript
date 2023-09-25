@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.default = (rows) => {
+exports.toCamelCase = void 0;
+const toCamelCase = (rows) => {
     return rows.map((row) => {
         const replaced = {};
         for (let key in row) {
@@ -10,3 +11,4 @@ exports.default = (rows) => {
         return replaced;
     });
 };
+exports.toCamelCase = toCamelCase;

@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.logOut = exports.resetPassword = exports.refreshTokenHandler = exports.logIn = exports.register = void 0;
+exports.refreshTokenHandler = exports.resetPassword = exports.logOut = exports.logIn = exports.register = exports.publicKeyPEM = void 0;
 const http_status_codes_1 = require("http-status-codes");
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const validator_1 = __importDefault(require("validator"));
@@ -13,12 +13,20 @@ const crypto_2 = __importDefault(require("crypto"));
 require("dotenv/config");
 const userAuthRepo_1 = __importDefault(require("../repos/userAuthRepo"));
 const passwordStrenght_1 = require("../utils/passwordStrenght");
-const { privateKey } = (0, crypto_1.generateKeyPairSync)("ed25519");
+const { privateKey, publicKey } = (0, crypto_1.generateKeyPairSync)("ed25519");
 const privateKeyPEM = privateKey.export({ type: "pkcs8", format: "pem" });
 if (!privateKeyPEM) {
     throw new Error("Private key is not set");
 }
+exports.publicKeyPEM = publicKey.export({ type: "spki", format: "pem" });
 const MAX_LOGIN_ATTEMPTS = parseInt(process.env.MAX_LOGIN_ATTEMPTS) || 3;
+/**
+ * @description register - This function is responsible for registering a new user.
+ * It first validates the input, checks if the user already exists, and then creates a new user in the database.
+ * If the user is the first to register, they are assigned the role of admin, otherwise, they get a user role.
+ * @param {Request} req - Express request object containing user details like username, email, password, security question and answer.
+ * @param {Response} res - Express response object used to send the response back to the client.
+ */
 const register = async (req, res) => {
     const { username, email, password, securityQuestion, securityAnswer } = req.body;
     if (!username || !validator_1.default.isEmail(email) || !password) {
@@ -46,11 +54,18 @@ const register = async (req, res) => {
     if (totalUsers === 0) {
         role = "admin";
     }
-    console.log("Inserting Email:", email);
     const user = await userAuthRepo_1.default.createUser(username, email, hashedPassword, securityQuestion, securityAnswer, role);
     res.status(http_status_codes_1.StatusCodes.CREATED).json(user);
 };
 exports.register = register;
+/**
+ * @description logIn - Authenticates a user by verifying their credentials.
+ * It checks the number of failed login attempts and if it exceeds the maximum limit, the account is suspended.
+ * If the credentials are valid, it resets the failed login attempts, creates a checksum of the user data, generates a token,
+ * and a refresh token, then sends them to the client.
+ * @param {Request} req - Express request object containing user credentials - email and password.
+ * @param {Response} res - Express response object used to send the response back to the client.
+ */
 const logIn = async (req, res) => {
     const { email, password } = req.body;
     if (!validator_1.default.isEmail(email) || !password) {
@@ -75,9 +90,14 @@ const logIn = async (req, res) => {
             .json({ msg: "Invalid credentials" });
     }
     await userAuthRepo_1.default.resetFailedLoginAttempts(user.id);
+    const checksumData = {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+    };
     const checksum = crypto_2.default
         .createHash("sha256")
-        .update(JSON.stringify(user))
+        .update(JSON.stringify(checksumData))
         .digest("hex");
     await userAuthRepo_1.default.updateChecksum(user.id, checksum);
     const token = await paseto_1.V2.sign({ userId: user.id, checksum }, privateKeyPEM);
@@ -96,6 +116,13 @@ const logIn = async (req, res) => {
     res.status(http_status_codes_1.StatusCodes.OK).json({ token });
 };
 exports.logIn = logIn;
+/**
+ * @description resetPassword - Allows the user to reset their password.
+ * It validates the input, verifies the user's security answer, and then updates the password in the database.
+ * Also, it resets the failed login attempts.
+ * @param {Request} req - Express request object containing email, security answer, and new password.
+ * @param {Response} res - Express response object used to send the response back to the client.
+ */
 const resetPassword = async (req, res) => {
     const { email, securityAnswer, newPassword } = req.body;
     if (!email || !securityAnswer || !newPassword) {
@@ -118,9 +145,28 @@ const resetPassword = async (req, res) => {
     const hashedPassword = await bcrypt_1.default.hash(newPassword, 12);
     await userAuthRepo_1.default.updatePassword(user.id, hashedPassword);
     await userAuthRepo_1.default.resetFailedLoginAttempts(user.id);
+    // Add the checksum update code here
+    const updatedUser = await userAuthRepo_1.default.findById(user.id); // Fetch the updated user data
+    const updatedChecksumData = {
+        id: updatedUser === null || updatedUser === void 0 ? void 0 : updatedUser.id,
+        username: updatedUser === null || updatedUser === void 0 ? void 0 : updatedUser.username,
+        email: updatedUser === null || updatedUser === void 0 ? void 0 : updatedUser.email,
+    };
+    const updatedChecksum = crypto_2.default
+        .createHash("sha256")
+        .update(JSON.stringify(updatedChecksumData))
+        .digest("hex");
+    await userAuthRepo_1.default.updateChecksum(user.id, updatedChecksum);
     res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "Password reset successfully" });
 };
 exports.resetPassword = resetPassword;
+/**
+ * @description refreshTokenHandler - Handles the refresh token to provide a new access token.
+ * It verifies the validity of the refresh token, and if valid, invalidates the old refresh token,
+ * generates a new access token and a new refresh token, then sends them to the client.
+ * @param {Request} req - Express request object containing the refresh token in cookies.
+ * @param {Response} res - Express response object used to send the response back to the client.
+ */
 const refreshTokenHandler = async (req, res) => {
     const { refreshToken } = req.cookies;
     if (!refreshToken) {
@@ -152,9 +198,27 @@ const refreshTokenHandler = async (req, res) => {
         secure: process.env.NODE_ENV === "production",
         httpOnly: true,
     });
+    res.cookie("token", newAccessToken, {
+        expires: new Date(Date.now() + 3 * 60 * 60 * 1000),
+        secure: process.env.NODE_ENV === "production",
+        httpOnly: true,
+    });
     res.status(http_status_codes_1.StatusCodes.OK).json({ token: newAccessToken });
 };
 exports.refreshTokenHandler = refreshTokenHandler;
+/**
+ * @description logOut - This function is responsible for logging out a user securely.
+ * It starts by checking the presence of a refresh token in the cookies. If no refresh token is found,
+ * it responds with a bad request status, indicating that no refresh token was provided.
+ * If a refresh token is present, it attempts to find a user associated with that token.
+ * If no user is found, it responds with an unauthorized status, signaling an invalid refresh token.
+ * If a valid user is found, it proceeds to invalidate the refresh token in the database, ensuring
+ * that it can't be used to generate new access tokens in the future.
+ * Lastly, it clears the token and refresh token cookies, and sends a response back to the client
+ * indicating that the user has been logged out successfully.
+ * @param {Request} req - Express request object containing the refresh token in cookies.
+ * @param {Response} res - Express response object used to send the response back to the client.
+ */
 const logOut = async (req, res) => {
     const { refreshToken } = req.cookies;
     if (!refreshToken) {

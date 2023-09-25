@@ -1,5 +1,6 @@
-import toCamelCase from "../utils/toCamelCase";
+import { toCamelCase } from "../utils";
 import pool from "../pool";
+import { QueryResultRow } from "pg";
 
 /**
  * @description UserRepo is responsible for handling database queries related to users.
@@ -54,6 +55,24 @@ class UserRepo {
   static async countUsers() {
     const result = await pool.query("SELECT COUNT(*) FROM users;");
     return parseInt(result?.rows[0].count);
+  }
+
+  /**
+   * @description Find a user by their ID.
+   * @param userId - The ID of the user.
+   * @returns The user object in camelCase format, or null if no user is found.
+   */
+  static async findById(userId: number) {
+    const result = await pool.query(`SELECT * FROM users WHERE id = $1;`, [
+      userId,
+    ]);
+
+    const { rows } = result as { rows: QueryResultRow[] };
+    if (!rows.length) {
+      return null;
+    }
+
+    return toCamelCase(rows)[0];
   }
 
   /**

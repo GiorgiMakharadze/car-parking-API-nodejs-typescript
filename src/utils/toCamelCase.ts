@@ -1,4 +1,4 @@
-export default (rows: any[]) => {
+export const toCamelCase = (rows: any[]) => {
   return rows.map((row: any) => {
     const replaced: { [key: string]: any } = {};
 

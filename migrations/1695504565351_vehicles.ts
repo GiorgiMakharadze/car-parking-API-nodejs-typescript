@@ -15,11 +15,11 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
     COMMENT ON TABLE vehicles IS 'Table to store vehicles each user adds.';
-    `);
+  `);
 }
 
 export async function down(pgm: MigrationBuilder): Promise<void> {
   pgm.sql(`
     DROP TABLE IF EXISTS vehicles;
-      `);
+  `);
 }

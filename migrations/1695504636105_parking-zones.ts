@@ -14,11 +14,11 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
     COMMENT ON TABLE parking_zones IS 'Table to store parking zones details created by admin.';
-    `);
+  `);
 }
 
 export async function down(pgm: MigrationBuilder): Promise<void> {
   pgm.sql(`
     DROP TABLE IF EXISTS parking_zones;
-      `);
+  `);
 }

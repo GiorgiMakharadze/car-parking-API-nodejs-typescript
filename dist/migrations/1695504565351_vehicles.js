@@ -14,12 +14,12 @@ async function up(pgm) {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
     COMMENT ON TABLE vehicles IS 'Table to store vehicles each user adds.';
-    `);
+  `);
 }
 exports.up = up;
 async function down(pgm) {
     pgm.sql(`
     DROP TABLE IF EXISTS vehicles;
-      `);
+  `);
 }
 exports.down = down;

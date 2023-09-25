@@ -70,6 +70,7 @@ const register = async (req: Request, res: Response) => {
     securityAnswer,
     role
   );
+
   res.status(StatusCodes.CREATED).json(user);
 };
 

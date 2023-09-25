@@ -3,23 +3,18 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.down = exports.up = exports.shorthands = void 0;
 exports.shorthands = undefined;
 async function up(pgm) {
-    pgm.addColumn("users", {
-        failed_login_attempts: {
-            type: "INT",
-            notNull: true,
-            default: 0,
-        },
-    });
-    pgm.addColumn("users", {
-        checksum: {
-            type: "VARCHAR(64)",
-            notNull: false,
-        },
-    });
+    pgm.sql(`
+    ALTER TABLE users 
+    ADD COLUMN failed_login_attempts INT NOT NULL DEFAULT 0,
+    ADD COLUMN checksum VARCHAR(64);
+  `);
 }
 exports.up = up;
 async function down(pgm) {
-    pgm.dropColumn("users", "checksum");
-    pgm.dropColumn("users", "failed_login_attempts");
+    pgm.sql(`
+    ALTER TABLE users 
+    DROP COLUMN IF EXISTS failed_login_attempts,
+    DROP COLUMN IF EXISTS checksum;
+  `);
 }
 exports.down = down;

@@ -67,7 +67,7 @@ class UserRepo {
    * @param userId - The ID of the user.
    * @returns The user object in camelCase format, or null if no user is found.
    */
-  static async findById(userId: number) {
+  static async findById(userId: string) {
     const result = await pool.query(`SELECT * FROM users WHERE id = $1;`, [
       userId,
     ]);
@@ -85,7 +85,7 @@ class UserRepo {
    * @description Increment the number of failed login attempts for a specific user.
    * @param userId - The ID of the user.
    */
-  static async incrementFailedLoginAttempts(userId: number) {
+  static async incrementFailedLoginAttempts(userId: string) {
     await pool.query(
       `UPDATE users SET failed_login_attempts = failed_login_attempts + 1 WHERE id = $1;`,
       [userId]
@@ -97,7 +97,7 @@ class UserRepo {
    * @description Reset the number of failed login attempts for a specific user.
    * @param userId - The ID of the user.
    */
-  static async resetFailedLoginAttempts(userId: number) {
+  static async resetFailedLoginAttempts(userId: string) {
     await pool.query(
       `UPDATE users SET failed_login_attempts = 0 WHERE id = $1;`,
       [userId]
@@ -110,7 +110,7 @@ class UserRepo {
    * @param userId - The ID of the user.
    * @param checksum - The new checksum.
    */
-  static async updateChecksum(userId: number, checksum: string) {
+  static async updateChecksum(userId: string, checksum: string) {
     await pool.query(`UPDATE users SET checksum = $1 WHERE id = $2;`, [
       checksum,
       userId as any,
@@ -123,7 +123,7 @@ class UserRepo {
    * @param userId - The ID of the user.
    * @param refreshToken - The new refresh token.
    */
-  static async saveRefreshToken(userId: number, refreshToken: string | null) {
+  static async saveRefreshToken(userId: string, refreshToken: string | null) {
     const expiryDate = refreshToken
       ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
       : null;
@@ -169,7 +169,7 @@ class UserRepo {
    * @param userId - The ID of the user.
    * @param hashedPassword - The new hashed password.
    */
-  static async updatePassword(userId: number, hashedPassword: string) {
+  static async updatePassword(userId: string, hashedPassword: string) {
     await pool.query(`UPDATE users SET password = $1 WHERE id = $2;`, [
       hashedPassword,
       userId as any,
@@ -181,7 +181,7 @@ class UserRepo {
    * @description Invalidate a user's refresh token.
    * @param userId - The ID of the user.
    */
-  static async invalidateRefreshToken(userId: number) {
+  static async invalidateRefreshToken(userId: string) {
     await pool.query(
       `UPDATE users SET refresh_token = NULL, refresh_token_expires_at = NULL WHERE id = $1;`,
       [userId as any]

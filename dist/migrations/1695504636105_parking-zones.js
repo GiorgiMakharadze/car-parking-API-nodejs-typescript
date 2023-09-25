@@ -13,12 +13,12 @@ async function up(pgm) {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
     COMMENT ON TABLE parking_zones IS 'Table to store parking zones details created by admin.';
-    `);
+  `);
 }
 exports.up = up;
 async function down(pgm) {
     pgm.sql(`
     DROP TABLE IF EXISTS parking_zones;
-      `);
+  `);
 }
 exports.down = down;

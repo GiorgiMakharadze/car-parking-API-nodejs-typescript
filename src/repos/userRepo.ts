@@ -52,6 +52,17 @@ class UserRepo {
   }
 
   /**
+   * @method findAllUsers
+   * @description Find's all users in Users table
+   * @returns All users.
+   */
+  static async findAllUsers() {
+    const result = await pool.query(`SELECT * FROM users;`);
+    const { rows } = result || { rows: [] };
+    return toCamelCase(rows);
+  }
+
+  /**
    * @method countUsers
    * @description Counts the total number of users.
    * @returns The total count of users.

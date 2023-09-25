@@ -6,7 +6,7 @@ import { V2 as paseto } from "paseto";
 import { generateKeyPairSync } from "crypto";
 import crypto from "crypto";
 import "dotenv/config";
-import UserRepo from "../repos/userAuthRepo";
+import UserRepo from "../repos/userRepo";
 import { passwordStrength, setCookies } from "../utils";
 
 const { privateKey, publicKey } = generateKeyPairSync("ed25519");

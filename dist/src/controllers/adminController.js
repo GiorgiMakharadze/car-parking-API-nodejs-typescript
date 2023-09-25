@@ -14,7 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getAllUsers = void 0;
+exports.getUserById = exports.getAllUsers = void 0;
 const http_status_codes_1 = require("http-status-codes");
 require("dotenv/config");
 const userRepo_1 = __importDefault(require("../repos/userRepo"));
@@ -27,3 +27,13 @@ const getAllUsers = async (req, res) => {
     res.status(http_status_codes_1.StatusCodes.OK).json(sanitizedUsers);
 };
 exports.getAllUsers = getAllUsers;
+const getUserById = async (req, res) => {
+    const userId = req.params.id;
+    const user = await userRepo_1.default.findById(userId);
+    if (!user) {
+        return res.status(http_status_codes_1.StatusCodes.NOT_FOUND).json({ msg: "User not found" });
+    }
+    const { password, refreshToken, checksum, securityQuestion, securityAnswer } = user, sanitizedUser = __rest(user, ["password", "refreshToken", "checksum", "securityQuestion", "securityAnswer"]);
+    res.status(http_status_codes_1.StatusCodes.OK).json(sanitizedUser);
+};
+exports.getUserById = getUserById;

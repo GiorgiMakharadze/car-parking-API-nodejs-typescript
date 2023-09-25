@@ -44,7 +44,7 @@ class UserRepo {
     }
     /**
      * @method findAllUsers
-     * @description Find's all ers iin Users table
+     * @description Find's all users in Users table
      * @returns All users.
      */
     static async findAllUsers() {

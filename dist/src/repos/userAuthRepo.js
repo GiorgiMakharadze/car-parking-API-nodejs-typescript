@@ -6,16 +6,18 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const utils_1 = require("../utils");
 const pool_1 = __importDefault(require("../pool"));
 /**
+ * @class UserRepo
  * @description UserRepo is responsible for handling database queries related to users.
- * Note: "as any" is used in methods due to a TypeScript error.
+ * "as any" is used in methods due to a TypeScript error.
  * The pg library accepts numbers for query parameters, but TypeScript expects strings.
  * This type assertion is necessary to align the data types with the library's expectations.
  */
 class UserRepo {
     /**
-     * @description Find a user by their email address.
-     * @param email - The email address of the user.
-     * @returns The user object in camelCase format.
+     * @method findByEmail
+     * @description Finds a user by their email address.
+     * @param email - User's email address.
+     * @returns The user object in camelCase format or undefined if not found.
      */
     static async findByEmail(email) {
         const result = await pool_1.default.query(`SELECT * FROM users WHERE email = $1;`, [
@@ -25,13 +27,14 @@ class UserRepo {
         return (0, utils_1.toCamelCase)(rows)[0];
     }
     /**
-     * @description Create a new user.
-     * @param username - The username of the new user.
-     * @param email - The email address of the new user.
-     * @param hashedPassword - The hashed password of the new user.
-     * @param securityQuestion - The security question of the new user.
-     * @param securityAnswer - The security answer of the new user.
-     * @param role - The role of the new user.
+     * @method createUser
+     * @description Creates a new user.
+     * @param username - New user's username.
+     * @param email - New user's email address.
+     * @param hashedPassword - New user's hashed password.
+     * @param securityQuestion - New user's security question.
+     * @param securityAnswer - New user's security answer.
+     * @param role - New user's role.
      * @returns The newly created user object in camelCase format.
      */
     static async createUser(username, email, hashedPassword, securityQuestion, securityAnswer, role) {
@@ -40,7 +43,8 @@ class UserRepo {
         return (0, utils_1.toCamelCase)(rows)[0];
     }
     /**
-     * @description Count the total number of users.
+     * @method countUsers
+     * @description Counts the total number of users.
      * @returns The total count of users.
      */
     static async countUsers() {
@@ -48,6 +52,7 @@ class UserRepo {
         return parseInt(result === null || result === void 0 ? void 0 : result.rows[0].count);
     }
     /**
+     * @method findById
      * @description Find a user by their ID.
      * @param userId - The ID of the user.
      * @returns The user object in camelCase format, or null if no user is found.
@@ -63,6 +68,7 @@ class UserRepo {
         return (0, utils_1.toCamelCase)(rows)[0];
     }
     /**
+     * @method incrementFailedLoginAttempts
      * @description Increment the number of failed login attempts for a specific user.
      * @param userId - The ID of the user.
      */
@@ -70,6 +76,7 @@ class UserRepo {
         await pool_1.default.query(`UPDATE users SET failed_login_attempts = failed_login_attempts + 1 WHERE id = $1;`, [userId]);
     }
     /**
+     * @method resetFailedLoginAttempts
      * @description Reset the number of failed login attempts for a specific user.
      * @param userId - The ID of the user.
      */
@@ -77,6 +84,7 @@ class UserRepo {
         await pool_1.default.query(`UPDATE users SET failed_login_attempts = 0 WHERE id = $1;`, [userId]);
     }
     /**
+     * @method updateChecksum
      * @description Update the checksum for a specific user.
      * @param userId - The ID of the user.
      * @param checksum - The new checksum.
@@ -88,6 +96,7 @@ class UserRepo {
         ]);
     }
     /**
+     * @method saveRefreshToken
      * @description Save a refresh token for a specific user.
      * @param userId - The ID of the user.
      * @param refreshToken - The new refresh token.
@@ -99,6 +108,7 @@ class UserRepo {
         await pool_1.default.query(`UPDATE users SET refresh_token = $1, refresh_token_expires_at = $2 WHERE id = $3;`, [refreshToken, expiryDate, userId]);
     }
     /**
+     * @method findByRefreshToken
      * @description Find a user by their refresh token.
      * @param refreshToken - The refresh token associated with the user.
      * @returns The user object in camelCase format.
@@ -109,6 +119,7 @@ class UserRepo {
         return (0, utils_1.toCamelCase)(rows)[0];
     }
     /**
+     * @method findByUsername
      * @description Find a user by their username.
      * @param username - The username of the user.
      * @returns The user object in camelCase format.
@@ -119,6 +130,7 @@ class UserRepo {
         return (0, utils_1.toCamelCase)(rows)[0];
     }
     /**
+     * @method updatePassword
      * @description Update the password for a specific user.
      * @param userId - The ID of the user.
      * @param hashedPassword - The new hashed password.
@@ -130,6 +142,7 @@ class UserRepo {
         ]);
     }
     /**
+     * @method invalidateRefreshToken
      * @description Invalidate a user's refresh token.
      * @param userId - The ID of the user.
      */

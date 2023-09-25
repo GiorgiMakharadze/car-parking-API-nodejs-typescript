@@ -3,16 +3,18 @@ import pool from "../pool";
 import { QueryResultRow } from "pg";
 
 /**
+ * @class UserRepo
  * @description UserRepo is responsible for handling database queries related to users.
- * Note: "as any" is used in methods due to a TypeScript error.
+ * "as any" is used in methods due to a TypeScript error.
  * The pg library accepts numbers for query parameters, but TypeScript expects strings.
  * This type assertion is necessary to align the data types with the library's expectations.
  */
 class UserRepo {
   /**
-   * @description Find a user by their email address.
-   * @param email - The email address of the user.
-   * @returns The user object in camelCase format.
+   * @method findByEmail
+   * @description Finds a user by their email address.
+   * @param email - User's email address.
+   * @returns The user object in camelCase format or undefined if not found.
    */
   static async findByEmail(email: string) {
     const result = await pool.query(`SELECT * FROM users WHERE email = $1;`, [
@@ -23,13 +25,14 @@ class UserRepo {
   }
 
   /**
-   * @description Create a new user.
-   * @param username - The username of the new user.
-   * @param email - The email address of the new user.
-   * @param hashedPassword - The hashed password of the new user.
-   * @param securityQuestion - The security question of the new user.
-   * @param securityAnswer - The security answer of the new user.
-   * @param role - The role of the new user.
+   * @method createUser
+   * @description Creates a new user.
+   * @param username - New user's username.
+   * @param email - New user's email address.
+   * @param hashedPassword - New user's hashed password.
+   * @param securityQuestion - New user's security question.
+   * @param securityAnswer - New user's security answer.
+   * @param role - New user's role.
    * @returns The newly created user object in camelCase format.
    */
   static async createUser(
@@ -49,7 +52,8 @@ class UserRepo {
   }
 
   /**
-   * @description Count the total number of users.
+   * @method countUsers
+   * @description Counts the total number of users.
    * @returns The total count of users.
    */
   static async countUsers() {
@@ -58,6 +62,7 @@ class UserRepo {
   }
 
   /**
+   * @method findById
    * @description Find a user by their ID.
    * @param userId - The ID of the user.
    * @returns The user object in camelCase format, or null if no user is found.
@@ -76,6 +81,7 @@ class UserRepo {
   }
 
   /**
+   * @method incrementFailedLoginAttempts
    * @description Increment the number of failed login attempts for a specific user.
    * @param userId - The ID of the user.
    */
@@ -87,6 +93,7 @@ class UserRepo {
   }
 
   /**
+   * @method resetFailedLoginAttempts
    * @description Reset the number of failed login attempts for a specific user.
    * @param userId - The ID of the user.
    */
@@ -98,6 +105,7 @@ class UserRepo {
   }
 
   /**
+   * @method updateChecksum
    * @description Update the checksum for a specific user.
    * @param userId - The ID of the user.
    * @param checksum - The new checksum.
@@ -110,6 +118,7 @@ class UserRepo {
   }
 
   /**
+   * @method saveRefreshToken
    * @description Save a refresh token for a specific user.
    * @param userId - The ID of the user.
    * @param refreshToken - The new refresh token.
@@ -125,6 +134,7 @@ class UserRepo {
   }
 
   /**
+   * @method findByRefreshToken
    * @description Find a user by their refresh token.
    * @param refreshToken - The refresh token associated with the user.
    * @returns The user object in camelCase format.
@@ -139,6 +149,7 @@ class UserRepo {
   }
 
   /**
+   * @method findByUsername
    * @description Find a user by their username.
    * @param username - The username of the user.
    * @returns The user object in camelCase format.
@@ -153,6 +164,7 @@ class UserRepo {
   }
 
   /**
+   * @method updatePassword
    * @description Update the password for a specific user.
    * @param userId - The ID of the user.
    * @param hashedPassword - The new hashed password.
@@ -165,6 +177,7 @@ class UserRepo {
   }
 
   /**
+   * @method invalidateRefreshToken
    * @description Invalidate a user's refresh token.
    * @param userId - The ID of the user.
    */

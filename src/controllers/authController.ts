@@ -7,19 +7,20 @@ import { generateKeyPairSync } from "crypto";
 import crypto from "crypto";
 import "dotenv/config";
 import UserRepo from "../repos/userAuthRepo";
-import { passwordStrength } from "../utils/passwordStrenght";
+import { passwordStrength, setCookies } from "../utils";
 
 const { privateKey, publicKey } = generateKeyPairSync("ed25519");
-const privateKeyPEM = privateKey.export({ type: "pkcs8", format: "pem" });
-if (!privateKeyPEM) {
-  throw new Error("Private key is not set");
-}
+const privateKeyPEM = privateKey.export({
+  type: "pkcs8",
+  format: "pem",
+}) as string;
 export const publicKeyPEM = publicKey.export({ type: "spki", format: "pem" });
 
 const MAX_LOGIN_ATTEMPTS =
   parseInt(process.env.MAX_LOGIN_ATTEMPTS as string) || 3;
 
 /**
+ * @function register
  * @description register - This function is responsible for registering a new user.
  * It first validates the input, checks if the user already exists, and then creates a new user in the database.
  * If the user is the first to register, they are assigned the role of admin, otherwise, they get a user role.
@@ -73,7 +74,8 @@ const register = async (req: Request, res: Response) => {
 };
 
 /**
- * @description logIn - Authenticates a user by verifying their credentials.
+ * @function logIn
+ * @description Authenticates a user by verifying their credentials.
  * It checks the number of failed login attempts and if it exceeds the maximum limit, the account is suspended.
  * If the credentials are valid, it resets the failed login attempts, creates a checksum of the user data, generates a token,
  * and a refresh token, then sends them to the client.
@@ -125,27 +127,17 @@ const logIn = async (req: Request, res: Response) => {
   const refreshToken = crypto.randomBytes(64).toString("hex");
   await UserRepo.saveRefreshToken(user.id, refreshToken);
 
-  res.cookie("token", token, {
-    expires: new Date(Date.now() + 3 * 60 * 60 * 1000),
-    secure: process.env.NODE_ENV === "production",
-    httpOnly: true,
-  });
-
-  res.cookie("refreshToken", refreshToken, {
-    expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-    secure: process.env.NODE_ENV === "production",
-    httpOnly: true,
-  });
+  setCookies(res, token, refreshToken);
 
   res.status(StatusCodes.OK).json({ token });
 };
 
 /**
- * @description resetPassword - Allows the user to reset their password.
- * It validates the input, verifies the user's security answer, and then updates the password in the database.
- * Also, it resets the failed login attempts.
- * @param {Request} req - Express request object containing email, security answer, and new password.
- * @param {Response} res - Express response object used to send the response back to the client.
+ * @function resetPassword
+ * @description Allows a user to reset their password after validating input and verifying security answer.
+ * Updates the password and resets failed login attempts upon successful verification.
+ * @param {Request} req - Contains email, security answer, and new password.
+ * @param {Response} res - Used to send the response back to the client.
  */
 const resetPassword = async (req: Request, res: Response) => {
   const { email, securityAnswer, newPassword } = req.body;
@@ -175,8 +167,7 @@ const resetPassword = async (req: Request, res: Response) => {
   await UserRepo.updatePassword(user.id, hashedPassword);
   await UserRepo.resetFailedLoginAttempts(user.id);
 
-  // Add the checksum update code here
-  const updatedUser = await UserRepo.findById(user.id); // Fetch the updated user data
+  const updatedUser = await UserRepo.findById(user.id);
   const updatedChecksumData = {
     id: updatedUser?.id,
     username: updatedUser?.username,
@@ -192,11 +183,11 @@ const resetPassword = async (req: Request, res: Response) => {
 };
 
 /**
- * @description refreshTokenHandler - Handles the refresh token to provide a new access token.
- * It verifies the validity of the refresh token, and if valid, invalidates the old refresh token,
- * generates a new access token and a new refresh token, then sends them to the client.
- * @param {Request} req - Express request object containing the refresh token in cookies.
- * @param {Response} res - Express response object used to send the response back to the client.
+ * @function refreshTokenHandler
+ * @description Verifies and refreshes tokens.
+ * If the provided refresh token is valid, it invalidates the old token, generates new tokens, and sends them to the client.
+ * @param {Request} req - Contains the refresh token in cookies.
+ * @param {Response} res - Used to send the response back to the client.
  */
 const refreshTokenHandler = async (req: Request, res: Response) => {
   const { refreshToken } = req.cookies;
@@ -234,33 +225,16 @@ const refreshTokenHandler = async (req: Request, res: Response) => {
 
   await UserRepo.saveRefreshToken(user.id, newRefreshToken);
 
-  res.cookie("refreshToken", newRefreshToken, {
-    expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-    secure: process.env.NODE_ENV === "production",
-    httpOnly: true,
-  });
-
-  res.cookie("token", newAccessToken, {
-    expires: new Date(Date.now() + 3 * 60 * 60 * 1000),
-    secure: process.env.NODE_ENV === "production",
-    httpOnly: true,
-  });
+  setCookies(res, newAccessToken, newRefreshToken);
 
   res.status(StatusCodes.OK).json({ token: newAccessToken });
 };
 
 /**
- * @description logOut - This function is responsible for logging out a user securely.
- * It starts by checking the presence of a refresh token in the cookies. If no refresh token is found,
- * it responds with a bad request status, indicating that no refresh token was provided.
- * If a refresh token is present, it attempts to find a user associated with that token.
- * If no user is found, it responds with an unauthorized status, signaling an invalid refresh token.
- * If a valid user is found, it proceeds to invalidate the refresh token in the database, ensuring
- * that it can't be used to generate new access tokens in the future.
- * Lastly, it clears the token and refresh token cookies, and sends a response back to the client
- * indicating that the user has been logged out successfully.
- * @param {Request} req - Express request object containing the refresh token in cookies.
- * @param {Response} res - Express response object used to send the response back to the client.
+ * @function logOut
+ * @description Logs out a user securely by invalidating the refresh token and clearing cookies.
+ * @param {Request} req - Contains the refresh token in cookies.
+ * @param {Response} res - Used to send the response back to the client, indicating successful logout.
  */
 const logOut = async (req: Request, res: Response) => {
   const { refreshToken } = req.cookies;

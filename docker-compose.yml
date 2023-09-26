@@ -7,6 +7,7 @@ services:
       - "5000:5000"
     depends_on:
       - postgres
+      - postgres_test
     env_file:
       - .env
     networks:
@@ -26,8 +27,23 @@ services:
     networks:
       - app-network
 
+  postgres_test:
+    container_name: postgres16_test
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: roottest
+      POSTGRES_PASSWORD: secrettest
+      POSTGRES_DB: carparkingtest
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
 networks:
   app-network:
 
 volumes:
   postgres_data:
+  postgres_test_data:

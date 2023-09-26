@@ -23,6 +23,7 @@ router
     .post(utils_1.authenticateToken, utils_1.adminValidation, adminController_1.createParkingZone);
 router
     .route("/parking-zone/:id")
+    .get(utils_1.authenticateToken, utils_1.adminValidation, adminController_1.getParkingZoneById)
     .delete(utils_1.authenticateToken, utils_1.adminValidation, adminController_1.deleteParkingZone)
     .patch(utils_1.authenticateToken, utils_1.adminValidation, adminController_1.updateParkingZone);
 exports.default = router;

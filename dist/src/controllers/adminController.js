@@ -117,7 +117,7 @@ const updateParkingZone = async (req, res) => {
     await (0, utils_1.validateParkingZoneExistence)(zoneId);
     const updatedParkingZone = await adminRepo_1.default.updateParkingZone(zoneId, name, address, hourlyCost);
     res.status(http_status_codes_1.StatusCodes.OK).json({
-        msg: `Parking zone with id ${zoneId} in updated`,
+        msg: `Parking zone with id ${zoneId} is updated`,
         updatedParkingZone,
     });
 };

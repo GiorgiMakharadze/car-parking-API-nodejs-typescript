@@ -9,7 +9,7 @@ const adminRepo_1 = __importDefault(require("../../repos/adminRepo"));
 const validateParkingZoneExistence = async (zoneId) => {
     const existingZone = await adminRepo_1.default.findParkingZoneById(zoneId);
     if (!existingZone) {
-        throw new Error("Parking zone not found");
+        throw new Error(`Parking zone with id ${zoneId} not found`);
     }
 };
 exports.validateParkingZoneExistence = validateParkingZoneExistence;

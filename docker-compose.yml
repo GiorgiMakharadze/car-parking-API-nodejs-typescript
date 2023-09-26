@@ -41,19 +41,6 @@ services:
     networks:
       - app-network
 
-  test:
-    build: .
-    command: npm test
-    depends_on:
-      - postgres_test
-    env_file:
-      - .env
-    networks:
-      - app-network
-    volumes:
-      - .:/app
-    working_dir: /app
-
 networks:
   app-network:
 

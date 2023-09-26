@@ -3,12 +3,10 @@ import buildApp from "../../app";
 import UserRepo from "../../repos/userRepo";
 import pool from "../../pool";
 
-jest.mock("../../src/repos/userRepo");
-const mockedUserRepo = UserRepo as jest.Mocked<typeof UserRepo>;
 const baseUrl = "/api/v1";
 
 beforeAll(async () => {
-  await pool.connect({
+  return pool.connect({
     host: "postgres_test",
     port: 5432,
     database: "carparkingtest",
@@ -18,13 +16,14 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await pool.close();
+  return pool.close();
 });
 
 it("create a user", async () => {
-  mockedUserRepo.countUsers.mockResolvedValue(0);
+  const startingCount = await UserRepo.countUsers();
 
-  const response = await request(buildApp)
+  expect(startingCount).toEqual(0);
+  await request(buildApp)
     .post(`${baseUrl}/auth/register`)
     .send({
       username: "test",
@@ -32,9 +31,9 @@ it("create a user", async () => {
       password: "giorgigiorgigiorgi1!",
       securityQuestion: "Your favorite Weapon?",
       securityAnswer: "Mk18",
-    });
+    })
+    .expect(200);
 
-  expect(response.status).toEqual(200);
-
-  expect(UserRepo.countUsers).toHaveBeenCalledTimes(1);
-});
+  const finishCount = await UserRepo.countUsers();
+  expect(finishCount).toHaveBeenCalledTimes(1);
+}, 10000);

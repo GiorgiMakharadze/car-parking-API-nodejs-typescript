@@ -1,4 +1,4 @@
-version: "3"
+version: "3.5"
 
 services:
   app:
@@ -40,6 +40,19 @@ services:
       - postgres_test_data:/var/lib/postgresql/data
     networks:
       - app-network
+
+  test:
+    build: .
+    command: npm test
+    depends_on:
+      - postgres_test
+    env_file:
+      - .env
+    networks:
+      - app-network
+    volumes:
+      - .:/app
+    working_dir: /app
 
 networks:
   app-network:

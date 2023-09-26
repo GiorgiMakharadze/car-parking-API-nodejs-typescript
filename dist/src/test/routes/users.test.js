@@ -4,35 +4,38 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const supertest_1 = __importDefault(require("supertest"));
-const app_1 = __importDefault(require("../../app"));
-const userRepo_1 = __importDefault(require("../../repos/userRepo"));
 const pool_1 = __importDefault(require("../../pool"));
-jest.mock("../../src/repos/userRepo");
-const mockedUserRepo = userRepo_1.default;
-const baseUrl = "/api/v1";
-beforeAll(async () => {
-    await pool_1.default.connect({
-        host: "postgres_test",
-        port: 5432,
-        database: "carparkingtest",
-        user: process.env.PGUSERTEST,
-        password: process.env.PGPASSWORDTEST,
+const http_status_codes_1 = require("http-status-codes");
+const app_1 = __importDefault(require("../../app"));
+describe("Auth Controller", () => {
+    beforeAll(async () => {
+        return pool_1.default.connect({
+            host: "postgres_test",
+            port: 5432,
+            database: "carparkingtest",
+            user: process.env.PGUSERTEST,
+            password: process.env.PGPASSWORDTEST,
+        });
     });
-});
-afterAll(async () => {
-    await pool_1.default.close();
-});
-it("create a user", async () => {
-    mockedUserRepo.countUsers.mockResolvedValue(0);
-    const response = await (0, supertest_1.default)(app_1.default)
-        .post(`${baseUrl}/auth/register`)
-        .send({
-        username: "test",
-        email: "test@gmail.com",
-        password: "giorgigiorgigiorgi1!",
-        securityQuestion: "Your favorite Weapon?",
-        securityAnswer: "Mk18",
+    afterAll(async () => {
+        return pool_1.default.close();
     });
-    expect(response.status).toEqual(200);
-    expect(userRepo_1.default.countUsers).toHaveBeenCalledTimes(1);
+    describe("POST /api/v1/auth/register", () => {
+        it("should register a new user", async () => {
+            const response = await (0, supertest_1.default)((0, app_1.default)())
+                .post("/api/v1/auth/register")
+                .send({
+                username: "testuser",
+                email: "testuser@example.com",
+                password: "StrongPassword123!",
+                securityQuestion: "What is your favorite color?",
+                securityAnswer: "Blue",
+            });
+            expect(response.status).toBe(http_status_codes_1.StatusCodes.CREATED);
+            expect(response.body).toHaveProperty("username", "testuser");
+            // Add any other assertions based on the response body
+            // Clean up: Optionally delete the user you have just created
+        });
+        // You can add more test cases as needed
+    });
 });

@@ -17,4 +17,12 @@ router
 router
     .route("/get-user/:id")
     .get(utils_1.authenticateToken, utils_1.adminValidation, adminController_1.getUserById);
+router
+    .route("/parking-zone")
+    .get(utils_1.authenticateToken, utils_1.adminValidation, adminController_1.getAllParkingZones)
+    .post(utils_1.authenticateToken, utils_1.adminValidation, adminController_1.createParkingZone);
+router
+    .route("/parking-zone/:id")
+    .delete(utils_1.authenticateToken, utils_1.adminValidation, adminController_1.deleteParkingZone)
+    .patch(utils_1.authenticateToken, utils_1.adminValidation, adminController_1.updateParkingZone);
 exports.default = router;

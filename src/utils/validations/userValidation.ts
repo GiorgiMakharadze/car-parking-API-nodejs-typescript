@@ -1,9 +1,9 @@
 import { Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
-import UserRepo from "../repos/userRepo";
-import { CustomRequest } from "../types/RequestTypes";
+import UserRepo from "../../repos/userRepo";
+import { CustomRequest } from "../../types/RequestTypes";
 
-export const adminValidation = [
+export const userValidation = [
   async (req: CustomRequest, res: Response, next: NextFunction) => {
     if (typeof req.userId === "undefined") {
       console.warn(`Unauthorized access attempt detected from IP: ${req.ip}`);
@@ -21,8 +21,8 @@ export const adminValidation = [
         .json({ msg: "Unauthorized access" });
     }
 
-    const adminRoles = ["admin"];
-    if (!adminRoles.includes(user.role)) {
+    const userRoles = ["user"];
+    if (!userRoles.includes(user.role)) {
       console.warn(
         `Forbidden access attempt detected from IP: ${req.ip} for user: ${user.username}`
       );

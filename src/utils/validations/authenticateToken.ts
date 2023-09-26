@@ -2,9 +2,9 @@ import { Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
 import { V2 as paseto } from "paseto";
 import crypto from "crypto";
-import UserRepo from "../repos/userRepo";
-import { publicKeyPEM } from "../controllers/authController";
-import { CustomRequest, PayloadType } from "../types/RequestTypes";
+import UserRepo from "../../repos/userRepo";
+import { publicKeyPEM } from "../../controllers/authController";
+import { CustomRequest, PayloadType } from "../../types/RequestTypes";
 
 /**
  * Middleware to authenticate token present in cookies.

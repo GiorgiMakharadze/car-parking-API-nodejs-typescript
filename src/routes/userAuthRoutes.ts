@@ -7,8 +7,7 @@ import {
   resetPassword,
   logOut,
 } from "../controllers/authController";
-import { getAllUsers, getUserById } from "../controllers/adminController";
-import { userValidation, adminValidation, authenticateToken } from "../utils";
+import { userValidation, authenticateToken } from "../utils";
 
 const router = Router();
 // const apiLimiter = rateLimit({
@@ -25,13 +24,5 @@ router.route("/reset-password").post(resetPassword);
 router.route("/logout").get(authenticateToken, userValidation, logOut);
 
 router.route("/refresh-token").post(refreshTokenHandler);
-
-//Admin route
-router
-  .route("/get-all-users")
-  .get(authenticateToken, adminValidation, getAllUsers);
-router
-  .route("/get-user/:id")
-  .get(authenticateToken, adminValidation, getUserById);
 
 export default router;

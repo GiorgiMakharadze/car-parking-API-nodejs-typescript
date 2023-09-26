@@ -1,9 +1,13 @@
-import { adminValidation } from "./adminValidation";
-import { userValidation } from "./userValidation";
+import { adminValidation } from "./validations/adminValidation";
+import { userValidation } from "./validations/userValidation";
 import { passwordStrength } from "./passwordStrength";
 import { toCamelCase } from "./toCamelCase";
-import { authenticateToken } from "./authenticateToken";
+import { authenticateToken } from "./validations/authenticateToken";
 import { setCookies } from "./setCookies";
+import {
+  validateParkingZoneExistence,
+  validateParkingZoneInput,
+} from "./validations/validateParkingZone";
 
 export {
   adminValidation,
@@ -12,4 +16,6 @@ export {
   passwordStrength,
   toCamelCase,
   setCookies,
+  validateParkingZoneExistence,
+  validateParkingZoneInput,
 };

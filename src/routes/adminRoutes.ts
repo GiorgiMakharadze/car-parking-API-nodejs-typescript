@@ -1,6 +1,14 @@
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
-import { getAllUsers, getUserById } from "../controllers/adminController";
+import {
+  getAllUsers,
+  getUserById,
+  getAllParkingZones,
+  getParkingZoneById,
+  createParkingZone,
+  deleteParkingZone,
+  updateParkingZone,
+} from "../controllers/adminController";
 import { adminValidation, authenticateToken } from "../utils";
 
 const router = Router();
@@ -15,8 +23,20 @@ const router = Router();
 router
   .route("/get-all-users")
   .get(authenticateToken, adminValidation, getAllUsers);
+
 router
   .route("/get-user/:id")
   .get(authenticateToken, adminValidation, getUserById);
+
+router
+  .route("/parking-zone")
+  .get(authenticateToken, adminValidation, getAllParkingZones)
+  .post(authenticateToken, adminValidation, createParkingZone);
+
+router
+  .route("/parking-zone/:id")
+  .get(authenticateToken, adminValidation, getParkingZoneById)
+  .delete(authenticateToken, adminValidation, deleteParkingZone)
+  .patch(authenticateToken, adminValidation, updateParkingZone);
 
 export default router;

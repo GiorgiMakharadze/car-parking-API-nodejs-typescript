@@ -64,28 +64,20 @@ const deleteUser = async (req, res) => {
 };
 exports.deleteUser = deleteUser;
 const makeUserAdmin = async (req, res) => {
-    // Retrieve the user ID from the request parameters
     const { id } = req.params;
-    const userId = id.toString(); // Convert userId to string
-    // Fetch the authenticated user's details using req.userId
+    const userId = id.toString();
     const authenticatedUser = await userRepo_1.default.findById(req.userId.toString());
-    // Check if the authenticated user exists and if they have the 'admin' role
     if (!authenticatedUser || authenticatedUser.role !== "admin") {
         return res.status(http_status_codes_1.StatusCodes.FORBIDDEN).json({ msg: "Permission denied" });
     }
-    // Fetch the user that is intended to be made admin
     const user = await userRepo_1.default.findById(userId);
-    // Check if the user exists
     if (!user) {
         return res.status(http_status_codes_1.StatusCodes.NOT_FOUND).json({ msg: "User not found" });
     }
-    // Check if the user is already an admin
     if (user.role === "admin") {
         return res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "User is already an admin" });
     }
-    // Grant admin rights to the user
-    await adminRepo_1.default.grantAdminRights(userId); // If grantAdminRights expects a number
-    // Send a successful response
+    await adminRepo_1.default.grantAdminRights(userId);
     return res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "User has been made admin" });
 };
 exports.makeUserAdmin = makeUserAdmin;

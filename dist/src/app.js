@@ -8,6 +8,7 @@ require("express-async-errors");
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const helmet_1 = __importDefault(require("helmet"));
 const xss_1 = __importDefault(require("xss"));
+const csurf_1 = __importDefault(require("csurf"));
 const middlewares_1 = require("./middlewares");
 const userAuthRoutes_1 = __importDefault(require("./routes/userAuthRoutes"));
 const adminRoutes_1 = __importDefault(require("./routes/adminRoutes"));
@@ -25,7 +26,18 @@ const createApp = () => {
         }
         next();
     });
+    // 4. CSRF
+    app.use((0, csurf_1.default)({
+        cookie: {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+        },
+    }));
+    app.use(middlewares_1.csrfErrorHandler);
     // 5. Routes
+    app.get("/api/v1/csrf-token", (req, res) => {
+        res.json({ csrfToken: req.csrfToken() });
+    });
     app.use("/api/v1/auth", userAuthRoutes_1.default);
     app.use("/api/v1/admin", adminRoutes_1.default);
     // 6. Error handling middlewares

@@ -3,7 +3,13 @@ import "express-async-errors";
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import xss from "xss";
-import { notFoundMiddleware, errorHandlerMiddleware } from "./middlewares";
+import csurf from "csurf";
+
+import {
+  notFoundMiddleware,
+  errorHandlerMiddleware,
+  csrfErrorHandler,
+} from "./middlewares";
 import authUserRouter from "./routes/userAuthRoutes";
 import adminRouter from "./routes/adminRoutes";
 
@@ -25,7 +31,21 @@ const createApp = () => {
     next();
   });
 
+  // 4. CSRF
+  app.use(
+    csurf({
+      cookie: {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+      },
+    })
+  );
+  app.use(csrfErrorHandler);
+
   // 5. Routes
+  app.get("/api/v1/csrf-token", (req, res) => {
+    res.json({ csrfToken: req.csrfToken() });
+  });
   app.use("/api/v1/auth", authUserRouter);
   app.use("/api/v1/admin", adminRouter);
 

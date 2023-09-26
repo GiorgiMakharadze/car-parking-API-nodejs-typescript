@@ -1,5 +1,4 @@
 import { Router } from "express";
-import rateLimit from "express-rate-limit";
 import {
   register,
   logIn,
@@ -10,12 +9,6 @@ import {
 import { userValidation, authenticateToken } from "../utils";
 
 const router = Router();
-// const apiLimiter = rateLimit({
-//   windowMs: 15 * 60 * 1000,
-//   max: 10,
-//   message:
-//     "Too many requests from this IP address,please try again after 15 minutes",
-// });
 
 //User Routes
 router.route("/register").post(register);

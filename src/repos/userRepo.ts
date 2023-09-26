@@ -11,20 +11,6 @@ import { QueryResultRow } from "pg";
  */
 class UserRepo {
   /**
-   * @method findByEmail
-   * @description Finds a user by their email address.
-   * @param email - User's email address.
-   * @returns The user object in camelCase format or undefined if not found.
-   */
-  static async findByEmail(email: string) {
-    const result = await pool.query(`SELECT * FROM users WHERE email = $1;`, [
-      email,
-    ]);
-    const { rows } = result || { rows: [] };
-    return toCamelCase(rows)[0];
-  }
-
-  /**
    * @method createUser
    * @description Creates a new user.
    * @param username - New user's username.
@@ -88,6 +74,20 @@ class UserRepo {
       return null;
     }
 
+    return toCamelCase(rows)[0];
+  }
+
+  /**
+   * @method findByEmail
+   * @description Finds a user by their email address.
+   * @param email - User's email address.
+   * @returns The user object in camelCase format or undefined if not found.
+   */
+  static async findByEmail(email: string) {
+    const result = await pool.query(`SELECT * FROM users WHERE email = $1;`, [
+      email,
+    ]);
+    const { rows } = result || { rows: [] };
     return toCamelCase(rows)[0];
   }
 

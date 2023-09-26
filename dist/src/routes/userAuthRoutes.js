@@ -4,12 +4,6 @@ const express_1 = require("express");
 const authController_1 = require("../controllers/authController");
 const utils_1 = require("../utils");
 const router = (0, express_1.Router)();
-// const apiLimiter = rateLimit({
-//   windowMs: 15 * 60 * 1000,
-//   max: 10,
-//   message:
-//     "Too many requests from this IP address,please try again after 15 minutes",
-// });
 //User Routes
 router.route("/register").post(authController_1.register);
 router.route("/login").post(authController_1.logIn);

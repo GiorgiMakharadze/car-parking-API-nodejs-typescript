@@ -14,19 +14,6 @@ const pool_1 = __importDefault(require("../pool"));
  */
 class UserRepo {
     /**
-     * @method findByEmail
-     * @description Finds a user by their email address.
-     * @param email - User's email address.
-     * @returns The user object in camelCase format or undefined if not found.
-     */
-    static async findByEmail(email) {
-        const result = await pool_1.default.query(`SELECT * FROM users WHERE email = $1;`, [
-            email,
-        ]);
-        const { rows } = result || { rows: [] };
-        return (0, utils_1.toCamelCase)(rows)[0];
-    }
-    /**
      * @method createUser
      * @description Creates a new user.
      * @param username - New user's username.
@@ -75,6 +62,19 @@ class UserRepo {
         if (!rows.length) {
             return null;
         }
+        return (0, utils_1.toCamelCase)(rows)[0];
+    }
+    /**
+     * @method findByEmail
+     * @description Finds a user by their email address.
+     * @param email - User's email address.
+     * @returns The user object in camelCase format or undefined if not found.
+     */
+    static async findByEmail(email) {
+        const result = await pool_1.default.query(`SELECT * FROM users WHERE email = $1;`, [
+            email,
+        ]);
+        const { rows } = result || { rows: [] };
         return (0, utils_1.toCamelCase)(rows)[0];
     }
     /**

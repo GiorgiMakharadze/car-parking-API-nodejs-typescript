@@ -8,6 +8,10 @@ import {
   validateParkingZoneExistence,
   validateParkingZoneInput,
 } from "./validations/validateParkingZone";
+import {
+  validateVehicleInput,
+  validateUserParkingZoneExistence,
+} from "./validations/validateVehicles";
 
 export {
   adminValidation,
@@ -18,4 +22,6 @@ export {
   setCookies,
   validateParkingZoneExistence,
   validateParkingZoneInput,
+  validateVehicleInput,
+  validateUserParkingZoneExistence,
 };

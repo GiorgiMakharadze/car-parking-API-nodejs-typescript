@@ -6,7 +6,7 @@ import { V2 as paseto } from "paseto";
 import { generateKeyPairSync } from "crypto";
 import crypto from "crypto";
 import "dotenv/config";
-import UserRepo from "../repos/userRepo";
+import UserRepo from "../repos/userAuthRepo";
 import { passwordStrength, setCookies } from "../utils";
 
 const { privateKey, publicKey } = generateKeyPairSync("ed25519");
@@ -257,6 +257,7 @@ const logOut = async (req: Request, res: Response) => {
 
   res.clearCookie("token");
   res.clearCookie("refreshToken");
+  res.clearCookie("_csrf");
 
   return res.status(StatusCodes.OK).json({ msg: "Logged out successfully" });
 };

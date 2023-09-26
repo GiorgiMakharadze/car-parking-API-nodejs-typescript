@@ -211,6 +211,7 @@ const logOut = async (req, res) => {
     await userRepo_1.default.invalidateRefreshToken(user.id);
     res.clearCookie("token");
     res.clearCookie("refreshToken");
+    res.clearCookie("_csrf");
     return res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "Logged out successfully" });
 };
 exports.logOut = logOut;

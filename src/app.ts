@@ -12,18 +12,16 @@ import {
 } from "./middlewares";
 import authUserRouter from "./routes/userAuthRoutes";
 import adminRouter from "./routes/adminRoutes";
+import userRoutes from "./routes/userRoutes";
 
 const createApp = () => {
   const app = express();
 
-  // 1. Middleware for standard request parsing
   app.use(express.json());
 
-  // 2. Security middlewares
   app.use(helmet());
   app.use(cookieParser());
 
-  // 3. XSS protection middleware
   app.use((req, res, next) => {
     if (req.body) {
       req.body = JSON.parse(xss(JSON.stringify(req.body)));
@@ -31,7 +29,6 @@ const createApp = () => {
     next();
   });
 
-  // 4. CSRF
   app.use(
     csurf({
       cookie: {
@@ -42,14 +39,13 @@ const createApp = () => {
   );
   app.use(csrfErrorHandler);
 
-  // 5. Routes
   app.get("/api/v1/csrf-token", (req, res) => {
     res.json({ csrfToken: req.csrfToken() });
   });
   app.use("/api/v1/auth", authUserRouter);
   app.use("/api/v1/admin", adminRouter);
+  app.use("/api/v1/vehicles", userRoutes);
 
-  // 6. Error handling middlewares
   app.use(notFoundMiddleware);
   app.use(errorHandlerMiddleware);
 

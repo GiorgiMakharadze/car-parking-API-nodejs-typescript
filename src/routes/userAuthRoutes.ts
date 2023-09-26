@@ -15,7 +15,6 @@ router.route("/register").post(register);
 router.route("/login").post(logIn);
 router.route("/reset-password").post(resetPassword);
 router.route("/logout").get(authenticateToken, userValidation, logOut);
-
 router.route("/refresh-token").post(refreshTokenHandler);
 
 export default router;

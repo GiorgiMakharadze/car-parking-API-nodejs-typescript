@@ -2,7 +2,7 @@ import { Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
 import { V2 as paseto } from "paseto";
 import crypto from "crypto";
-import UserRepo from "../../repos/userRepo";
+import UserRepo from "../../repos/userAuthRepo";
 import { publicKeyPEM } from "../../controllers/authController";
 import { CustomRequest, PayloadType } from "../../types/RequestTypes";
 

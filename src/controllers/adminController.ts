@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
-import UserRepo from "../repos/userRepo";
+import UserRepo from "../repos/userAuthRepo";
 import AdminRepo from "../repos/adminRepo";
 import {
   validateParkingZoneInput,

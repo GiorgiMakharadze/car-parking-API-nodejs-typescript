@@ -16,7 +16,11 @@ router
     .get(utils_1.authenticateToken, utils_1.adminValidation, adminController_1.getAllUsers);
 router
     .route("/get-user/:id")
-    .get(utils_1.authenticateToken, utils_1.adminValidation, adminController_1.getUserById);
+    .get(utils_1.authenticateToken, utils_1.adminValidation, adminController_1.getUserById)
+    .delete(utils_1.authenticateToken, utils_1.adminValidation, adminController_1.deleteUser);
+router
+    .route("/get-user/grant-admin/:id")
+    .patch(utils_1.authenticateToken, utils_1.adminValidation, adminController_1.makeUserAdmin);
 router
     .route("/parking-zone")
     .get(utils_1.authenticateToken, utils_1.adminValidation, adminController_1.getAllParkingZones)

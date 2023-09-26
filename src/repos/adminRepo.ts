@@ -114,6 +114,30 @@ class AdminRepo {
     const { rows } = result || { rows: [] };
     return toCamelCase(rows)[0];
   }
+
+  static async deleteUser(userId: number) {
+    const result = await pool.query(
+      `DELETE FROM users WHERE id = $1 RETURNING *;`,
+      [userId]
+    );
+    const { rows } = result || { rows: [] };
+    if (!rows.length) {
+      return null;
+    }
+    return toCamelCase(rows)[0];
+  }
+
+  static async grantAdminRights(userId: string) {
+    const result = await pool.query(
+      `UPDATE users SET role = 'admin' WHERE id = $1 RETURNING *;`,
+      [userId]
+    );
+    const { rows } = result || { rows: [] };
+    if (!rows.length) {
+      return null;
+    }
+    return toCamelCase(rows)[0];
+  }
 }
 
 export default AdminRepo;

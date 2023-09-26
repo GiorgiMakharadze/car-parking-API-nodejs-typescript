@@ -3,11 +3,13 @@ import rateLimit from "express-rate-limit";
 import {
   getAllUsers,
   getUserById,
+  deleteUser,
   getAllParkingZones,
   getParkingZoneById,
   createParkingZone,
   deleteParkingZone,
   updateParkingZone,
+  makeUserAdmin,
 } from "../controllers/adminController";
 import { adminValidation, authenticateToken } from "../utils";
 
@@ -26,7 +28,12 @@ router
 
 router
   .route("/get-user/:id")
-  .get(authenticateToken, adminValidation, getUserById);
+  .get(authenticateToken, adminValidation, getUserById)
+  .delete(authenticateToken, adminValidation, deleteUser);
+
+router
+  .route("/get-user/grant-admin/:id")
+  .patch(authenticateToken, adminValidation, makeUserAdmin);
 
 router
   .route("/parking-zone")

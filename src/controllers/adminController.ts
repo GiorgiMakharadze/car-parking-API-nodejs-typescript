@@ -59,6 +59,42 @@ const getUserById = async (req: Request, res: Response) => {
   res.status(StatusCodes.OK).json(sanitizedUser);
 };
 
+const deleteUser = async (req: Request, res: Response) => {
+  const userId = parseInt(req.params.id);
+
+  const deletedUser = await AdminRepo.deleteUser(userId);
+  if (!deletedUser) {
+    return res.status(StatusCodes.NOT_FOUND).json({ msg: "User not found" });
+  }
+
+  res.status(StatusCodes.OK).json({ msg: `User with id ${userId} is deleted` });
+};
+
+const makeUserAdmin = async (req: any, res: Response) => {
+  const { id } = req.params;
+  const userId = id.toString();
+
+  const authenticatedUser = await UserRepo.findById(req.userId.toString());
+
+  if (!authenticatedUser || authenticatedUser.role !== "admin") {
+    return res.status(StatusCodes.FORBIDDEN).json({ msg: "Permission denied" });
+  }
+
+  const user = await UserRepo.findById(userId);
+
+  if (!user) {
+    return res.status(StatusCodes.NOT_FOUND).json({ msg: "User not found" });
+  }
+
+  if (user.role === "admin") {
+    return res.status(StatusCodes.OK).json({ msg: "User is already an admin" });
+  }
+
+  await AdminRepo.grantAdminRights(userId);
+
+  return res.status(StatusCodes.OK).json({ msg: "User has been made admin" });
+};
+
 /**
  * @function createParkingZone
  * @description Validate input and create a new parking zone.
@@ -163,6 +199,8 @@ const deleteParkingZone = async (req: Request, res: Response) => {
 export {
   getAllUsers,
   getUserById,
+  deleteUser,
+  makeUserAdmin,
   createParkingZone,
   getAllParkingZones,
   getParkingZoneById,

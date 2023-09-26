@@ -8,7 +8,6 @@ require("express-async-errors");
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const helmet_1 = __importDefault(require("helmet"));
 const xss_1 = __importDefault(require("xss"));
-const csrf_1 = __importDefault(require("csrf"));
 const middlewares_1 = require("./middlewares");
 const userAuthRoutes_1 = __importDefault(require("./routes/userAuthRoutes"));
 const adminRoutes_1 = __importDefault(require("./routes/adminRoutes"));
@@ -24,13 +23,6 @@ const createApp = () => {
         if (req.body) {
             req.body = JSON.parse((0, xss_1.default)(JSON.stringify(req.body)));
         }
-        next();
-    });
-    // 4. CSRF protection middleware
-    const csrfProtection = new csrf_1.default();
-    app.use((req, res, next) => {
-        const token = csrfProtection.create(req.cookies._csrf);
-        res.cookie("_csrf", token);
         next();
     });
     // 5. Routes

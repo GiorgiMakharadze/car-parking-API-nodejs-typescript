@@ -3,7 +3,6 @@ import "express-async-errors";
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import xss from "xss";
-import CSRF from "csrf";
 import { notFoundMiddleware, errorHandlerMiddleware } from "./middlewares";
 import authUserRouter from "./routes/userAuthRoutes";
 import adminRouter from "./routes/adminRoutes";
@@ -23,14 +22,6 @@ const createApp = () => {
     if (req.body) {
       req.body = JSON.parse(xss(JSON.stringify(req.body)));
     }
-    next();
-  });
-
-  // 4. CSRF protection middleware
-  const csrfProtection = new CSRF();
-  app.use((req, res, next) => {
-    const token = csrfProtection.create(req.cookies._csrf);
-    res.cookie("_csrf", token);
     next();
   });
 

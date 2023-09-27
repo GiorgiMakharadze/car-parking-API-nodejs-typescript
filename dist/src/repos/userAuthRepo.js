@@ -12,20 +12,7 @@ const pool_1 = __importDefault(require("../pool"));
  * The pg library accepts numbers for query parameters, but TypeScript expects strings.
  * This type assertion is necessary to align the data types with the library's expectations.
  */
-class UserRepo {
-    /**
-     * @method findByEmail
-     * @description Finds a user by their email address.
-     * @param email - User's email address.
-     * @returns The user object in camelCase format or undefined if not found.
-     */
-    static async findByEmail(email) {
-        const result = await pool_1.default.query(`SELECT * FROM users WHERE email = $1;`, [
-            email,
-        ]);
-        const { rows } = result || { rows: [] };
-        return (0, utils_1.toCamelCase)(rows)[0];
-    }
+class AuthUserRepo {
     /**
      * @method createUser
      * @description Creates a new user.
@@ -41,6 +28,16 @@ class UserRepo {
         const result = await pool_1.default.query(`INSERT INTO users (username, email, password, security_question, security_answer, role) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;`, [username, email, hashedPassword, securityQuestion, securityAnswer, role]);
         const { rows } = result || { rows: [] };
         return (0, utils_1.toCamelCase)(rows)[0];
+    }
+    /**
+     * @method findAllUsers
+     * @description Find's all users in Users table
+     * @returns All users.
+     */
+    static async findAllUsers() {
+        const result = await pool_1.default.query(`SELECT * FROM users;`);
+        const { rows } = result || { rows: [] };
+        return (0, utils_1.toCamelCase)(rows);
     }
     /**
      * @method countUsers
@@ -65,6 +62,19 @@ class UserRepo {
         if (!rows.length) {
             return null;
         }
+        return (0, utils_1.toCamelCase)(rows)[0];
+    }
+    /**
+     * @method findByEmail
+     * @description Finds a user by their email address.
+     * @param email - User's email address.
+     * @returns The user object in camelCase format or undefined if not found.
+     */
+    static async findByEmail(email) {
+        const result = await pool_1.default.query(`SELECT * FROM users WHERE email = $1;`, [
+            email,
+        ]);
+        const { rows } = result || { rows: [] };
         return (0, utils_1.toCamelCase)(rows)[0];
     }
     /**
@@ -150,4 +160,4 @@ class UserRepo {
         await pool_1.default.query(`UPDATE users SET refresh_token = NULL, refresh_token_expires_at = NULL WHERE id = $1;`, [userId]);
     }
 }
-exports.default = UserRepo;
+exports.default = AuthUserRepo;

@@ -44,7 +44,7 @@ const createApp = () => {
   });
   app.use("/api/v1/auth", authUserRouter);
   app.use("/api/v1/admin", adminRouter);
-  app.use("/api/v1/vehicles", userRoutes);
+  app.use("/api/v1/users", userRoutes);
 
   app.use(notFoundMiddleware);
   app.use(errorHandlerMiddleware);

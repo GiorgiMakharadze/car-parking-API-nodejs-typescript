@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.adminValidation = void 0;
 const http_status_codes_1 = require("http-status-codes");
-const userRepo_1 = __importDefault(require("../../repos/userRepo"));
+const userAuthRepo_1 = __importDefault(require("../../repos/userAuthRepo"));
 exports.adminValidation = [
     async (req, res, next) => {
         if (typeof req.userId === "undefined") {
@@ -14,7 +14,7 @@ exports.adminValidation = [
                 .status(http_status_codes_1.StatusCodes.UNAUTHORIZED)
                 .json({ msg: "Unauthorized access" });
         }
-        const user = await userRepo_1.default.findById(req.userId);
+        const user = await userAuthRepo_1.default.findById(req.userId);
         if (!user) {
             console.warn(`Unauthorized access attempt detected from IP: ${req.ip}`);
             return res

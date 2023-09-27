@@ -2,7 +2,7 @@ import { Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
 import { V2 as paseto } from "paseto";
 import crypto from "crypto";
-import UserRepo from "../../repos/userAuthRepo";
+import AuthUserRepo from "../../repos/userAuthRepo";
 import { publicKeyPEM } from "../../controllers/authController";
 import { CustomRequest, PayloadType } from "../../types/RequestTypes";
 
@@ -33,14 +33,14 @@ export const authenticateToken = async (
 
   const payload = (await paseto.verify(token, publicKeyPEM)) as PayloadType;
 
-  const user = await UserRepo.findById(payload.userId);
+  const user = await AuthUserRepo.findById(payload.userId);
   if (!user) {
     console.warn(`Unauthorized access attempt detected from IP: ${req.ip}`);
     return res
       .status(StatusCodes.UNAUTHORIZED)
       .json({ msg: "User does not exist" });
   }
-
+  console.log("Middleware: User ID set as: ", user.id);
   const stableFields = {
     id: user.id,
     username: user.username,

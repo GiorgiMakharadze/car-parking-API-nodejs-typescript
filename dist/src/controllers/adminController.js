@@ -16,7 +16,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteParkingZone = exports.updateParkingZone = exports.getParkingZoneById = exports.getAllParkingZones = exports.createParkingZone = exports.makeUserAdmin = exports.deleteUser = exports.getUserById = exports.getAllUsers = void 0;
 const http_status_codes_1 = require("http-status-codes");
-const userRepo_1 = __importDefault(require("../repos/userRepo"));
+const userAuthRepo_1 = __importDefault(require("../repos/userAuthRepo"));
 const adminRepo_1 = __importDefault(require("../repos/adminRepo"));
 const utils_1 = require("../utils");
 /**
@@ -28,7 +28,7 @@ const utils_1 = require("../utils");
  * @param {Response} res - Express response object used to send the sanitized user details back to the client.
  */
 const getAllUsers = async (req, res) => {
-    const users = await userRepo_1.default.findAllUsers();
+    const users = await userAuthRepo_1.default.findAllUsers();
     const sanitizedUsers = users.map((user) => {
         const { password, refreshToken, checksum, securityQuestion, securityAnswer } = user, sanitizedUser = __rest(user, ["password", "refreshToken", "checksum", "securityQuestion", "securityAnswer"]);
         return sanitizedUser;
@@ -46,7 +46,7 @@ exports.getAllUsers = getAllUsers;
  */
 const getUserById = async (req, res) => {
     const userId = req.params.id;
-    const user = await userRepo_1.default.findById(userId);
+    const user = await userAuthRepo_1.default.findById(userId);
     if (!user) {
         return res.status(http_status_codes_1.StatusCodes.NOT_FOUND).json({ msg: "User not found" });
     }
@@ -66,11 +66,11 @@ exports.deleteUser = deleteUser;
 const makeUserAdmin = async (req, res) => {
     const { id } = req.params;
     const userId = id.toString();
-    const authenticatedUser = await userRepo_1.default.findById(req.userId.toString());
+    const authenticatedUser = await userAuthRepo_1.default.findById(req.userId.toString());
     if (!authenticatedUser || authenticatedUser.role !== "admin") {
         return res.status(http_status_codes_1.StatusCodes.FORBIDDEN).json({ msg: "Permission denied" });
     }
-    const user = await userRepo_1.default.findById(userId);
+    const user = await userAuthRepo_1.default.findById(userId);
     if (!user) {
         return res.status(http_status_codes_1.StatusCodes.NOT_FOUND).json({ msg: "User not found" });
     }
@@ -161,7 +161,7 @@ const deleteParkingZone = async (req, res) => {
     await (0, utils_1.validateParkingZoneExistence)(zoneId);
     await adminRepo_1.default.deleteParkingZone(zoneId);
     res
-        .status(http_status_codes_1.StatusCodes.NO_CONTENT)
+        .status(http_status_codes_1.StatusCodes.OK)
         .json({ msg: `Parking zone wit id ${zoneId} is deleted` });
 };
 exports.deleteParkingZone = deleteParkingZone;

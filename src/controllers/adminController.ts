@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
-import UserRepo from "../repos/userAuthRepo";
+import AuthUserRepo from "../repos/userAuthRepo";
 import AdminRepo from "../repos/adminRepo";
 import {
   validateParkingZoneInput,
@@ -16,7 +16,7 @@ import {
  * @param {Response} res - Express response object used to send the sanitized user details back to the client.
  */
 const getAllUsers = async (req: Request, res: Response) => {
-  const users = await UserRepo.findAllUsers();
+  const users = await AuthUserRepo.findAllUsers();
   const sanitizedUsers = users.map((user) => {
     const {
       password,
@@ -41,7 +41,7 @@ const getAllUsers = async (req: Request, res: Response) => {
  */
 const getUserById = async (req: Request, res: Response) => {
   const userId = req.params.id;
-  const user = await UserRepo.findById(userId);
+  const user = await AuthUserRepo.findById(userId);
 
   if (!user) {
     return res.status(StatusCodes.NOT_FOUND).json({ msg: "User not found" });
@@ -74,13 +74,13 @@ const makeUserAdmin = async (req: any, res: Response) => {
   const { id } = req.params;
   const userId = id.toString();
 
-  const authenticatedUser = await UserRepo.findById(req.userId.toString());
+  const authenticatedUser = await AuthUserRepo.findById(req.userId.toString());
 
   if (!authenticatedUser || authenticatedUser.role !== "admin") {
     return res.status(StatusCodes.FORBIDDEN).json({ msg: "Permission denied" });
   }
 
-  const user = await UserRepo.findById(userId);
+  const user = await AuthUserRepo.findById(userId);
 
   if (!user) {
     return res.status(StatusCodes.NOT_FOUND).json({ msg: "User not found" });
@@ -192,7 +192,7 @@ const deleteParkingZone = async (req: Request, res: Response) => {
 
   await AdminRepo.deleteParkingZone(zoneId);
   res
-    .status(StatusCodes.NO_CONTENT)
+    .status(StatusCodes.OK)
     .json({ msg: `Parking zone wit id ${zoneId} is deleted` });
 };
 

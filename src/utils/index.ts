@@ -8,10 +8,7 @@ import {
   validateParkingZoneExistence,
   validateParkingZoneInput,
 } from "./validations/validateParkingZone";
-import {
-  validateVehicleInput,
-  validateUserParkingZoneExistence,
-} from "./validations/validateVehicles";
+import { validateVehicleInput } from "./validations/validateVehicles";
 
 export {
   adminValidation,
@@ -23,5 +20,4 @@ export {
   validateParkingZoneExistence,
   validateParkingZoneInput,
   validateVehicleInput,
-  validateUserParkingZoneExistence,
 };

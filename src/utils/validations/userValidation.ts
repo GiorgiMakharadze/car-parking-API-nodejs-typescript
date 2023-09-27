@@ -1,6 +1,6 @@
 import { Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
-import UserRepo from "../../repos/userAuthRepo";
+import AuthUserRepo from "../../repos/userAuthRepo";
 import { CustomRequest } from "../../types/RequestTypes";
 
 export const userValidation = [
@@ -12,7 +12,7 @@ export const userValidation = [
         .json({ msg: "Unauthorized access" });
     }
 
-    const user = await UserRepo.findById(req.userId);
+    const user = await AuthUserRepo.findById(req.userId);
 
     if (!user) {
       console.warn(`Unauthorized access attempt detected from IP: ${req.ip}`);

@@ -12,21 +12,18 @@ const csurf_1 = __importDefault(require("csurf"));
 const middlewares_1 = require("./middlewares");
 const userAuthRoutes_1 = __importDefault(require("./routes/userAuthRoutes"));
 const adminRoutes_1 = __importDefault(require("./routes/adminRoutes"));
+const userRoutes_1 = __importDefault(require("./routes/userRoutes"));
 const createApp = () => {
     const app = (0, express_1.default)();
-    // 1. Middleware for standard request parsing
     app.use(express_1.default.json());
-    // 2. Security middlewares
     app.use((0, helmet_1.default)());
     app.use((0, cookie_parser_1.default)());
-    // 3. XSS protection middleware
     app.use((req, res, next) => {
         if (req.body) {
             req.body = JSON.parse((0, xss_1.default)(JSON.stringify(req.body)));
         }
         next();
     });
-    // 4. CSRF
     app.use((0, csurf_1.default)({
         cookie: {
             httpOnly: true,
@@ -34,13 +31,12 @@ const createApp = () => {
         },
     }));
     app.use(middlewares_1.csrfErrorHandler);
-    // 5. Routes
     app.get("/api/v1/csrf-token", (req, res) => {
         res.json({ csrfToken: req.csrfToken() });
     });
     app.use("/api/v1/auth", userAuthRoutes_1.default);
     app.use("/api/v1/admin", adminRoutes_1.default);
-    // 6. Error handling middlewares
+    app.use("/api/v1/users", userRoutes_1.default);
     app.use(middlewares_1.notFoundMiddleware);
     app.use(middlewares_1.errorHandlerMiddleware);
     return app;

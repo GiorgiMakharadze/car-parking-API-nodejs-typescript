@@ -11,7 +11,7 @@ const paseto_1 = require("paseto");
 const crypto_1 = require("crypto");
 const crypto_2 = __importDefault(require("crypto"));
 require("dotenv/config");
-const userRepo_1 = __importDefault(require("../repos/userRepo"));
+const userAuthRepo_1 = __importDefault(require("../repos/userAuthRepo"));
 const utils_1 = require("../utils");
 const { privateKey, publicKey } = (0, crypto_1.generateKeyPairSync)("ed25519");
 const privateKeyPEM = privateKey.export({
@@ -38,7 +38,7 @@ const register = async (req, res) => {
             msg: "Weak password. It should be at least 10 characters long, contain a number and a special character.",
         });
     }
-    const existingUser = await userRepo_1.default.findByEmail(email);
+    const existingUser = await userAuthRepo_1.default.findByEmail(email);
     if (existingUser) {
         return res
             .status(http_status_codes_1.StatusCodes.CONFLICT)
@@ -51,11 +51,11 @@ const register = async (req, res) => {
     }
     const hashedPassword = await bcrypt_1.default.hash(password, 12);
     let role = "user";
-    const totalUsers = await userRepo_1.default.countUsers();
+    const totalUsers = await userAuthRepo_1.default.countUsers();
     if (totalUsers === 0) {
         role = "admin";
     }
-    const user = await userRepo_1.default.createUser(username, email, hashedPassword, securityQuestion, securityAnswer, role);
+    const user = await userAuthRepo_1.default.createUser(username, email, hashedPassword, securityQuestion, securityAnswer, role);
     res.status(http_status_codes_1.StatusCodes.CREATED).json(user);
 };
 exports.register = register;
@@ -73,7 +73,7 @@ const logIn = async (req, res) => {
     if (!validator_1.default.isEmail(email) || !password) {
         return res.status(http_status_codes_1.StatusCodes.BAD_REQUEST).json({ msg: "Invalid input" });
     }
-    const user = await userRepo_1.default.findByEmail(email);
+    const user = await userAuthRepo_1.default.findByEmail(email);
     if (!user) {
         return res
             .status(http_status_codes_1.StatusCodes.UNAUTHORIZED)
@@ -86,12 +86,12 @@ const logIn = async (req, res) => {
     }
     const isValidPassword = await bcrypt_1.default.compare(password, user.password);
     if (!isValidPassword) {
-        await userRepo_1.default.incrementFailedLoginAttempts(user.id);
+        await userAuthRepo_1.default.incrementFailedLoginAttempts(user.id);
         return res
             .status(http_status_codes_1.StatusCodes.UNAUTHORIZED)
             .json({ msg: "Invalid credentials" });
     }
-    await userRepo_1.default.resetFailedLoginAttempts(user.id);
+    await userAuthRepo_1.default.resetFailedLoginAttempts(user.id);
     const checksumData = {
         id: user.id,
         username: user.username,
@@ -101,10 +101,10 @@ const logIn = async (req, res) => {
         .createHash("sha256")
         .update(JSON.stringify(checksumData))
         .digest("hex");
-    await userRepo_1.default.updateChecksum(user.id, checksum);
+    await userAuthRepo_1.default.updateChecksum(user.id, checksum);
     const token = await paseto_1.V2.sign({ userId: user.id, checksum }, privateKeyPEM);
     const refreshToken = crypto_2.default.randomBytes(64).toString("hex");
-    await userRepo_1.default.saveRefreshToken(user.id, refreshToken);
+    await userAuthRepo_1.default.saveRefreshToken(user.id, refreshToken);
     (0, utils_1.setCookies)(res, token, refreshToken);
     res.status(http_status_codes_1.StatusCodes.OK).json({ token });
 };
@@ -126,7 +126,7 @@ const resetPassword = async (req, res) => {
             msg: "Weak password. It should be at least 10 characters long, contain a number and a special character.",
         });
     }
-    const user = await userRepo_1.default.findByEmail(email);
+    const user = await userAuthRepo_1.default.findByEmail(email);
     if (!user) {
         return res.status(http_status_codes_1.StatusCodes.NOT_FOUND).json({ msg: "User not found" });
     }
@@ -136,9 +136,9 @@ const resetPassword = async (req, res) => {
             .json({ msg: "Invalid security answer" });
     }
     const hashedPassword = await bcrypt_1.default.hash(newPassword, 12);
-    await userRepo_1.default.updatePassword(user.id, hashedPassword);
-    await userRepo_1.default.resetFailedLoginAttempts(user.id);
-    const updatedUser = await userRepo_1.default.findById(user.id);
+    await userAuthRepo_1.default.updatePassword(user.id, hashedPassword);
+    await userAuthRepo_1.default.resetFailedLoginAttempts(user.id);
+    const updatedUser = await userAuthRepo_1.default.findById(user.id);
     const updatedChecksumData = {
         id: updatedUser === null || updatedUser === void 0 ? void 0 : updatedUser.id,
         username: updatedUser === null || updatedUser === void 0 ? void 0 : updatedUser.username,
@@ -148,7 +148,7 @@ const resetPassword = async (req, res) => {
         .createHash("sha256")
         .update(JSON.stringify(updatedChecksumData))
         .digest("hex");
-    await userRepo_1.default.updateChecksum(user.id, updatedChecksum);
+    await userAuthRepo_1.default.updateChecksum(user.id, updatedChecksum);
     res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "Password reset successfully" });
 };
 exports.resetPassword = resetPassword;
@@ -166,7 +166,7 @@ const refreshTokenHandler = async (req, res) => {
             .status(http_status_codes_1.StatusCodes.BAD_REQUEST)
             .json({ msg: "No refresh token provided" });
     }
-    const user = await userRepo_1.default.findByRefreshToken(refreshToken);
+    const user = await userAuthRepo_1.default.findByRefreshToken(refreshToken);
     if (!user) {
         return res
             .status(http_status_codes_1.StatusCodes.UNAUTHORIZED)
@@ -177,14 +177,14 @@ const refreshTokenHandler = async (req, res) => {
             .status(http_status_codes_1.StatusCodes.UNAUTHORIZED)
             .json({ msg: "Refresh token has expired" });
     }
-    await userRepo_1.default.saveRefreshToken(user.id, null);
+    await userAuthRepo_1.default.saveRefreshToken(user.id, null);
     const checksum = crypto_2.default
         .createHash("sha256")
         .update(JSON.stringify(user))
         .digest("hex");
     const newAccessToken = await paseto_1.V2.sign({ userId: user.id, checksum }, privateKeyPEM);
     const newRefreshToken = crypto_2.default.randomBytes(64).toString("hex");
-    await userRepo_1.default.saveRefreshToken(user.id, newRefreshToken);
+    await userAuthRepo_1.default.saveRefreshToken(user.id, newRefreshToken);
     (0, utils_1.setCookies)(res, newAccessToken, newRefreshToken);
     res.status(http_status_codes_1.StatusCodes.OK).json({ token: newAccessToken });
 };
@@ -202,13 +202,13 @@ const logOut = async (req, res) => {
             .status(http_status_codes_1.StatusCodes.BAD_REQUEST)
             .json({ msg: "No refresh token provided" });
     }
-    const user = await userRepo_1.default.findByRefreshToken(refreshToken);
+    const user = await userAuthRepo_1.default.findByRefreshToken(refreshToken);
     if (!user) {
         return res
             .status(http_status_codes_1.StatusCodes.UNAUTHORIZED)
             .json({ msg: "Invalid refresh token" });
     }
-    await userRepo_1.default.invalidateRefreshToken(user.id);
+    await userAuthRepo_1.default.invalidateRefreshToken(user.id);
     res.clearCookie("token");
     res.clearCookie("refreshToken");
     res.clearCookie("_csrf");

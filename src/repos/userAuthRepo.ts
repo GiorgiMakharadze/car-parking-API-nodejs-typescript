@@ -9,7 +9,7 @@ import { QueryResultRow } from "pg";
  * The pg library accepts numbers for query parameters, but TypeScript expects strings.
  * This type assertion is necessary to align the data types with the library's expectations.
  */
-class UserRepo {
+class AuthUserRepo {
   /**
    * @method createUser
    * @description Creates a new user.
@@ -64,7 +64,7 @@ class UserRepo {
    * @param userId - The ID of the user.
    * @returns The user object in camelCase format, or null if no user is found.
    */
-  static async findById(userId: string) {
+  static async findById(userId: any) {
     const result = await pool.query(`SELECT * FROM users WHERE id = $1;`, [
       userId,
     ]);
@@ -200,4 +200,4 @@ class UserRepo {
   }
 }
 
-export default UserRepo;
+export default AuthUserRepo;

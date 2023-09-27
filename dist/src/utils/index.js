@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.validateParkingZoneInput = exports.validateParkingZoneExistence = exports.setCookies = exports.toCamelCase = exports.passwordStrength = exports.authenticateToken = exports.userValidation = exports.adminValidation = void 0;
+exports.validateVehicleInput = exports.validateParkingZoneInput = exports.validateParkingZoneExistence = exports.setCookies = exports.toCamelCase = exports.passwordStrength = exports.authenticateToken = exports.userValidation = exports.adminValidation = void 0;
 const adminValidation_1 = require("./validations/adminValidation");
 Object.defineProperty(exports, "adminValidation", { enumerable: true, get: function () { return adminValidation_1.adminValidation; } });
 const userValidation_1 = require("./validations/userValidation");
@@ -16,3 +16,5 @@ Object.defineProperty(exports, "setCookies", { enumerable: true, get: function (
 const validateParkingZone_1 = require("./validations/validateParkingZone");
 Object.defineProperty(exports, "validateParkingZoneExistence", { enumerable: true, get: function () { return validateParkingZone_1.validateParkingZoneExistence; } });
 Object.defineProperty(exports, "validateParkingZoneInput", { enumerable: true, get: function () { return validateParkingZone_1.validateParkingZoneInput; } });
+const validateVehicles_1 = require("./validations/validateVehicles");
+Object.defineProperty(exports, "validateVehicleInput", { enumerable: true, get: function () { return validateVehicles_1.validateVehicleInput; } });

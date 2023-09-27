@@ -1,5 +1,3 @@
-// utils/validate.ts
-
 import validator from "validator";
 
 const validateVehicleInput = (

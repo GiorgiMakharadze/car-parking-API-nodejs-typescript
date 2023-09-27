@@ -6,7 +6,7 @@ import { V2 as paseto } from "paseto";
 import { generateKeyPairSync } from "crypto";
 import crypto from "crypto";
 import "dotenv/config";
-import UserRepo from "../repos/userAuthRepo";
+import AuthUserRepo from "../repos/userAuthRepo";
 import { passwordStrength, setCookies } from "../utils";
 
 const { privateKey, publicKey } = generateKeyPairSync("ed25519");
@@ -41,7 +41,7 @@ const register = async (req: Request, res: Response) => {
     });
   }
 
-  const existingUser = await UserRepo.findByEmail(email);
+  const existingUser = await AuthUserRepo.findByEmail(email);
   if (existingUser) {
     return res
       .status(StatusCodes.CONFLICT)
@@ -57,12 +57,12 @@ const register = async (req: Request, res: Response) => {
   const hashedPassword = await bcrypt.hash(password, 12);
   let role = "user";
 
-  const totalUsers = await UserRepo.countUsers();
+  const totalUsers = await AuthUserRepo.countUsers();
   if (totalUsers === 0) {
     role = "admin";
   }
 
-  const user = await UserRepo.createUser(
+  const user = await AuthUserRepo.createUser(
     username,
     email,
     hashedPassword,
@@ -90,7 +90,7 @@ const logIn = async (req: Request, res: Response) => {
     return res.status(StatusCodes.BAD_REQUEST).json({ msg: "Invalid input" });
   }
 
-  const user = await UserRepo.findByEmail(email);
+  const user = await AuthUserRepo.findByEmail(email);
   if (!user) {
     return res
       .status(StatusCodes.UNAUTHORIZED)
@@ -105,13 +105,13 @@ const logIn = async (req: Request, res: Response) => {
 
   const isValidPassword = await bcrypt.compare(password, user.password);
   if (!isValidPassword) {
-    await UserRepo.incrementFailedLoginAttempts(user.id);
+    await AuthUserRepo.incrementFailedLoginAttempts(user.id);
     return res
       .status(StatusCodes.UNAUTHORIZED)
       .json({ msg: "Invalid credentials" });
   }
 
-  await UserRepo.resetFailedLoginAttempts(user.id);
+  await AuthUserRepo.resetFailedLoginAttempts(user.id);
 
   const checksumData = {
     id: user.id,
@@ -122,11 +122,11 @@ const logIn = async (req: Request, res: Response) => {
     .createHash("sha256")
     .update(JSON.stringify(checksumData))
     .digest("hex");
-  await UserRepo.updateChecksum(user.id, checksum);
+  await AuthUserRepo.updateChecksum(user.id, checksum);
 
   const token = await paseto.sign({ userId: user.id, checksum }, privateKeyPEM);
   const refreshToken = crypto.randomBytes(64).toString("hex");
-  await UserRepo.saveRefreshToken(user.id, refreshToken);
+  await AuthUserRepo.saveRefreshToken(user.id, refreshToken);
 
   setCookies(res, token, refreshToken);
 
@@ -153,7 +153,7 @@ const resetPassword = async (req: Request, res: Response) => {
     });
   }
 
-  const user = await UserRepo.findByEmail(email);
+  const user = await AuthUserRepo.findByEmail(email);
   if (!user) {
     return res.status(StatusCodes.NOT_FOUND).json({ msg: "User not found" });
   }
@@ -165,10 +165,10 @@ const resetPassword = async (req: Request, res: Response) => {
   }
 
   const hashedPassword = await bcrypt.hash(newPassword, 12);
-  await UserRepo.updatePassword(user.id, hashedPassword);
-  await UserRepo.resetFailedLoginAttempts(user.id);
+  await AuthUserRepo.updatePassword(user.id, hashedPassword);
+  await AuthUserRepo.resetFailedLoginAttempts(user.id);
 
-  const updatedUser = await UserRepo.findById(user.id);
+  const updatedUser = await AuthUserRepo.findById(user.id);
   const updatedChecksumData = {
     id: updatedUser?.id,
     username: updatedUser?.username,
@@ -178,7 +178,7 @@ const resetPassword = async (req: Request, res: Response) => {
     .createHash("sha256")
     .update(JSON.stringify(updatedChecksumData))
     .digest("hex");
-  await UserRepo.updateChecksum(user.id, updatedChecksum);
+  await AuthUserRepo.updateChecksum(user.id, updatedChecksum);
 
   res.status(StatusCodes.OK).json({ msg: "Password reset successfully" });
 };
@@ -199,7 +199,7 @@ const refreshTokenHandler = async (req: Request, res: Response) => {
       .json({ msg: "No refresh token provided" });
   }
 
-  const user = await UserRepo.findByRefreshToken(refreshToken);
+  const user = await AuthUserRepo.findByRefreshToken(refreshToken);
   if (!user) {
     return res
       .status(StatusCodes.UNAUTHORIZED)
@@ -212,7 +212,7 @@ const refreshTokenHandler = async (req: Request, res: Response) => {
       .json({ msg: "Refresh token has expired" });
   }
 
-  await UserRepo.saveRefreshToken(user.id, null);
+  await AuthUserRepo.saveRefreshToken(user.id, null);
 
   const checksum = crypto
     .createHash("sha256")
@@ -224,7 +224,7 @@ const refreshTokenHandler = async (req: Request, res: Response) => {
   );
   const newRefreshToken = crypto.randomBytes(64).toString("hex");
 
-  await UserRepo.saveRefreshToken(user.id, newRefreshToken);
+  await AuthUserRepo.saveRefreshToken(user.id, newRefreshToken);
 
   setCookies(res, newAccessToken, newRefreshToken);
 
@@ -246,14 +246,14 @@ const logOut = async (req: Request, res: Response) => {
       .json({ msg: "No refresh token provided" });
   }
 
-  const user = await UserRepo.findByRefreshToken(refreshToken);
+  const user = await AuthUserRepo.findByRefreshToken(refreshToken);
   if (!user) {
     return res
       .status(StatusCodes.UNAUTHORIZED)
       .json({ msg: "Invalid refresh token" });
   }
 
-  await UserRepo.invalidateRefreshToken(user.id);
+  await AuthUserRepo.invalidateRefreshToken(user.id);
 
   res.clearCookie("token");
   res.clearCookie("refreshToken");

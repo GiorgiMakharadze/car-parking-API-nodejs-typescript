@@ -10,6 +10,7 @@ import {
   deleteParkingZone,
   updateParkingZone,
   makeUserAdmin,
+  viewParkingHistory,
 } from "../controllers/adminController";
 import { adminValidation, authenticateToken } from "../utils";
 
@@ -21,7 +22,6 @@ const router = Router();
 //     "Too many requests from this IP address,please try again after 15 minutes",
 // });
 
-//Admin route
 router
   .route("/get-all-users")
   .get(authenticateToken, adminValidation, getAllUsers);
@@ -45,5 +45,9 @@ router
   .get(authenticateToken, adminValidation, getParkingZoneById)
   .delete(authenticateToken, adminValidation, deleteParkingZone)
   .patch(authenticateToken, adminValidation, updateParkingZone);
+
+router
+  .route("/parking-history")
+  .get(authenticateToken, adminValidation, viewParkingHistory);
 
 export default router;

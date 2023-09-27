@@ -10,7 +10,6 @@ import { userValidation, authenticateToken } from "../utils";
 
 const router = Router();
 
-//User Routes
 router.route("/register").post(register);
 router.route("/login").post(logIn);
 router.route("/reset-password").post(resetPassword);

@@ -197,6 +197,11 @@ const deleteParkingZone = async (req: Request, res: Response) => {
     .json({ msg: `Parking zone wit id ${zoneId} is deleted` });
 };
 
+const viewParkingHistory = async (_req: Request, res: Response) => {
+  const parkingHistories = await AdminRepo.findAllParkingHistories();
+  res.status(StatusCodes.OK).json(parkingHistories);
+};
+
 export {
   getAllUsers,
   getUserById,
@@ -207,4 +212,5 @@ export {
   getParkingZoneById,
   updateParkingZone,
   deleteParkingZone,
+  viewParkingHistory,
 };

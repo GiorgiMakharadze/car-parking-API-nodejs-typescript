@@ -141,6 +141,24 @@ class AdminRepo {
     }
     return toCamelCase(rows)[0];
   }
+
+  static async findAllParkingHistories() {
+    const result = await pool.query(`
+      SELECT 
+        ph.*, 
+        pz.name as parking_zone_name,
+        pz.address as parking_zone_address,
+        u.username as user_username,
+        v.name as vehicle_name,
+        v.state_number as vehicle_state_number
+      FROM parking_history ph
+      JOIN parking_zones pz ON ph.zone_id = pz.id
+      JOIN users u ON ph.user_id = u.id
+      JOIN vehicles v ON ph.vehicle_id = v.id
+    `);
+    const { rows } = result || { rows: [] };
+    return toCamelCase(rows);
+  }
 }
 
 export default AdminRepo;

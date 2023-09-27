@@ -71,6 +71,30 @@ class UserRepo {
     const { rows } = result || { rows: [] };
     return rows.length ? toCamelCase(rows)[0] : null;
   }
+
+  static async addParkingHistory(
+    userId: number,
+    vehicleId: number,
+    parkingZoneId: number,
+    endTime: Date,
+    cost: number
+  ) {
+    const result = await pool.query(
+      `INSERT INTO parking_history (user_id, vehicle_id, zone_id, end_time, cost) VALUES ($1, $2, $3, $4, $5) RETURNING *;`,
+      [userId, vehicleId, parkingZoneId, endTime, cost] as any
+    );
+    const { rows } = result || { rows: [] };
+    return toCamelCase(rows)[0];
+  }
+
+  static async updateBalance(userId: number, newBalance: number) {
+    const result = await pool.query(
+      `UPDATE users SET balance = $2 WHERE id = $1 RETURNING *;`,
+      [userId, newBalance]
+    );
+    const { rows } = result || { rows: [] };
+    return toCamelCase(rows)[0];
+  }
 }
 
 export default UserRepo;

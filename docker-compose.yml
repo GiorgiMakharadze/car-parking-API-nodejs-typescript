@@ -35,7 +35,7 @@ services:
       POSTGRES_PASSWORD: secrettest
       POSTGRES_DB: carparkingtest
     ports:
-      - "5433:5432"
+      - "5433:5433"
     volumes:
       - postgres_test_data:/var/lib/postgresql/data
     networks:

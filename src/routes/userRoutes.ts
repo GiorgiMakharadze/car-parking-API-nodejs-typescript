@@ -4,6 +4,7 @@ import {
   editVehicle,
   deleteVehicle,
   getUserVehicles,
+  reserveParkingZone,
 } from "../controllers/userController";
 import { userValidation, authenticateToken } from "../utils";
 
@@ -18,5 +19,9 @@ router
   .route("/:userId/vehicles/:vehicleId")
   .patch(authenticateToken, userValidation, editVehicle)
   .delete(authenticateToken, userValidation, deleteVehicle);
+
+router
+  .route("/:userId/reserve")
+  .post(authenticateToken, userValidation, reserveParkingZone);
 
 export default router;

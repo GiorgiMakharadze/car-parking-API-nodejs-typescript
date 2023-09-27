@@ -11,7 +11,7 @@ const validateParkingZoneExistence = async (zoneId: number) => {
 const validateParkingZoneInput = (
   name: string,
   address: string,
-  hourlyCost: any
+  hourlyCost: number
 ) => {
   if (!validator.isAlpha(name, "en-US", { ignore: " " })) {
     throw new Error("Invalid zone name");

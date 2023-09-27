@@ -1,11 +1,14 @@
 import { toCamelCase } from "../utils";
 import pool from "../pool";
 import { QueryResultRow } from "pg";
-import { ParkingZoneProp } from "../types/ParkingZone";
 /**
  * @class AdminRepo
  * @description AdminRepo is responsible for handling database queries related to parking zones.
+ * @ImportantNote "as any" is used in methods due to a TypeScript error.
+ * The pg library accepts numbers for query parameters, but TypeScript expects strings.
+ * This type assertion is necessary to align the data types with the library's expectations.
  */
+
 class AdminRepo {
   /**
    * @method createParkingZone
@@ -18,11 +21,11 @@ class AdminRepo {
   static async createParkingZone(
     name: string,
     address: string,
-    hourlyCost: any
+    hourlyCost: number
   ) {
     const result = await pool.query(
       `INSERT INTO parking_zones (name, address, hourly_cost) VALUES ($1, $2, $3) RETURNING *;`,
-      [name, address, hourlyCost]
+      [name, address, hourlyCost as any]
     );
     const { rows } = result || { rows: [] };
     return toCamelCase(rows)[0];
@@ -86,14 +89,14 @@ class AdminRepo {
    * @returns The updated parking zone object in camelCase format.
    */
   static async updateParkingZone(
-    id: any,
+    id: number,
     name: string,
     address: string,
-    hourlyCost: any
+    hourlyCost: number
   ) {
     const result = await pool.query(
       `UPDATE parking_zones SET name = $2, address = $3, hourly_cost = $4 WHERE id = $1 RETURNING *;`,
-      [id, name, address, hourlyCost]
+      [id, name, address, hourlyCost as any]
     );
 
     const { rows } = result || { rows: [] };
@@ -127,10 +130,10 @@ class AdminRepo {
     return toCamelCase(rows)[0];
   }
 
-  static async grantAdminRights(userId: string) {
+  static async grantAdminRights(userId: number | string) {
     const result = await pool.query(
       `UPDATE users SET role = 'admin' WHERE id = $1 RETURNING *;`,
-      [userId]
+      [userId as any]
     );
     const { rows } = result || { rows: [] };
     if (!rows.length) {

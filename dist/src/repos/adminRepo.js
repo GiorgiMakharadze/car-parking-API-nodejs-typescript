@@ -8,6 +8,9 @@ const pool_1 = __importDefault(require("../pool"));
 /**
  * @class AdminRepo
  * @description AdminRepo is responsible for handling database queries related to parking zones.
+ * "as any" is used in methods due to a TypeScript error.
+ * The pg library accepts numbers for query parameters, but TypeScript expects strings.
+ * This type assertion is necessary to align the data types with the library's expectations.
  */
 class AdminRepo {
     /**

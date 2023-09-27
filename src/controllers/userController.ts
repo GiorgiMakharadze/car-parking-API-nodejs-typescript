@@ -3,6 +3,7 @@ import { StatusCodes } from "http-status-codes";
 import UserRepo from "../repos/userRepo";
 import { validateVehicleInput, validateParkingZoneExistence } from "../utils";
 import AuthUserRepo from "../repos/userAuthRepo";
+import { CustomRequest } from "../types/RequestTypes";
 
 const addVehicle = async (req: Request, res: Response) => {
   const userId = parseInt(req.params.userId);
@@ -57,8 +58,8 @@ const deleteVehicle = async (req: Request, res: Response) => {
   if (!vehicle) {
     return res.status(StatusCodes.NOT_FOUND).json({ msg: "Vehicle not found" });
   }
-
-  if (parseInt(vehicle.userId) !== userId) {
+  // if (parseInt(vehicle.userId) !== userId)
+  if (vehicle.userId !== userId) {
     return res
       .status(StatusCodes.FORBIDDEN)
       .json({ msg: "Unauthorized action" });
@@ -68,10 +69,10 @@ const deleteVehicle = async (req: Request, res: Response) => {
   res.status(StatusCodes.OK).json({ msg: "Vehicle deleted" });
 };
 
-const getUserVehicles = async (req: any, res: Response) => {
+const getUserVehicles = async (req: CustomRequest, res: Response) => {
   const userId = parseInt(req.params.userId);
-  //change type
-  if (parseInt(req.userId) !== userId) {
+
+  if (req.userId !== userId) {
     return res.status(StatusCodes.FORBIDDEN).json({ msg: "Unauthorized" });
   }
 

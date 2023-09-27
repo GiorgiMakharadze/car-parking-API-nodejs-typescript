@@ -3,9 +3,9 @@ import pool from "../pool";
 import { QueryResultRow } from "pg";
 
 /**
- * @class UserRepo
+ * @class AuthUserRepo
  * @description UserRepo is responsible for handling database queries related to users.
- * "as any" is used in methods due to a TypeScript error.
+ * @ImportantNote "as any" is used in methods due to a TypeScript error.
  * The pg library accepts numbers for query parameters, but TypeScript expects strings.
  * This type assertion is necessary to align the data types with the library's expectations.
  */
@@ -121,7 +121,7 @@ class AuthUserRepo {
    * @param userId - The ID of the user.
    * @param checksum - The new checksum.
    */
-  static async updateChecksum(userId: string, checksum: string) {
+  static async updateChecksum(userId: number, checksum: string) {
     await pool.query(`UPDATE users SET checksum = $1 WHERE id = $2;`, [
       checksum,
       userId as any,
@@ -134,7 +134,7 @@ class AuthUserRepo {
    * @param userId - The ID of the user.
    * @param refreshToken - The new refresh token.
    */
-  static async saveRefreshToken(userId: string, refreshToken: string | null) {
+  static async saveRefreshToken(userId: number, refreshToken: string | null) {
     const expiryDate = refreshToken
       ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
       : null;
@@ -180,7 +180,7 @@ class AuthUserRepo {
    * @param userId - The ID of the user.
    * @param hashedPassword - The new hashed password.
    */
-  static async updatePassword(userId: string, hashedPassword: string) {
+  static async updatePassword(userId: number, hashedPassword: string) {
     await pool.query(`UPDATE users SET password = $1 WHERE id = $2;`, [
       hashedPassword,
       userId as any,
@@ -192,7 +192,7 @@ class AuthUserRepo {
    * @description Invalidate a user's refresh token.
    * @param userId - The ID of the user.
    */
-  static async invalidateRefreshToken(userId: string) {
+  static async invalidateRefreshToken(userId: number) {
     await pool.query(
       `UPDATE users SET refresh_token = NULL, refresh_token_expires_at = NULL WHERE id = $1;`,
       [userId as any]

@@ -6,13 +6,20 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const utils_1 = require("../utils");
 const pool_1 = __importDefault(require("../pool"));
 const adminRepo_1 = __importDefault(require("./adminRepo"));
+/**
+ * @class UserRepo
+ * @description UserRepo is responsible for handling database queries related to users.
+ * "as any" is used in methods due to a TypeScript error.
+ * The pg library accepts numbers for query parameters, but TypeScript expects strings.
+ * This type assertion is necessary to align the data types with the library's expectations.
+ */
 class UserRepo {
     static async addVehicle(userId, name, stateNumber, type, parkingZoneId) {
         const parkingZone = await adminRepo_1.default.findParkingZoneById(parkingZoneId);
         if (!parkingZone) {
             throw new Error(`Parking zone with id ${parkingZoneId} not found`);
         }
-        const result = await pool_1.default.query(`INSERT INTO vehicles (user_id, name, state_number, type) VALUES ($1, $2, $3, $4) RETURNING *;`, [userId, name, stateNumber, type]);
+        const result = await pool_1.default.query(`INSERT INTO vehicles (user_id, name, state_number, type, parking_zone_id) VALUES ($1, $2, $3, $4, $5) RETURNING *;`, [userId, name, stateNumber, type, parkingZoneId]);
         const { rows } = result || { rows: [] };
         return (0, utils_1.toCamelCase)(rows)[0];
     }
@@ -29,7 +36,7 @@ class UserRepo {
     static async getUserVehicles(userId) {
         const result = await pool_1.default.query(`SELECT * FROM vehicles WHERE user_id = $1;`, [userId]);
         const { rows } = result || { rows: [] };
-        return (0, utils_1.toCamelCase)(rows)[0];
+        return (0, utils_1.toCamelCase)(rows);
     }
     static async findVehicleById(vehicleId) {
         const result = await pool_1.default.query(`SELECT * FROM vehicles WHERE id = $1;`, [

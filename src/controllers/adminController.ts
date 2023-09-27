@@ -6,6 +6,7 @@ import {
   validateParkingZoneInput,
   validateParkingZoneExistence,
 } from "../utils";
+import { CustomRequest } from "../types/RequestTypes";
 
 /**
  * @function getAllUsers
@@ -70,11 +71,11 @@ const deleteUser = async (req: Request, res: Response) => {
   res.status(StatusCodes.OK).json({ msg: `User with id ${userId} is deleted` });
 };
 
-const makeUserAdmin = async (req: any, res: Response) => {
+const makeUserAdmin = async (req: CustomRequest, res: Response) => {
   const { id } = req.params;
-  const userId = id.toString();
+  const userId = id;
 
-  const authenticatedUser = await AuthUserRepo.findById(req.userId.toString());
+  const authenticatedUser = await AuthUserRepo.findById(req.userId);
 
   if (!authenticatedUser || authenticatedUser.role !== "admin") {
     return res.status(StatusCodes.FORBIDDEN).json({ msg: "Permission denied" });

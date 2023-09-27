@@ -65,8 +65,8 @@ const deleteUser = async (req, res) => {
 exports.deleteUser = deleteUser;
 const makeUserAdmin = async (req, res) => {
     const { id } = req.params;
-    const userId = id.toString();
-    const authenticatedUser = await userAuthRepo_1.default.findById(req.userId.toString());
+    const userId = id;
+    const authenticatedUser = await userAuthRepo_1.default.findById(req.userId);
     if (!authenticatedUser || authenticatedUser.role !== "admin") {
         return res.status(http_status_codes_1.StatusCodes.FORBIDDEN).json({ msg: "Permission denied" });
     }

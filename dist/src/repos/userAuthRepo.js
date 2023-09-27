@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const utils_1 = require("../utils");
 const pool_1 = __importDefault(require("../pool"));
 /**
- * @class UserRepo
+ * @class AuthUserRepo
  * @description UserRepo is responsible for handling database queries related to users.
  * "as any" is used in methods due to a TypeScript error.
  * The pg library accepts numbers for query parameters, but TypeScript expects strings.

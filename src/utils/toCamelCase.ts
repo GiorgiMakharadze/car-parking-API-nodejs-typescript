@@ -1,5 +1,7 @@
-export const toCamelCase = (rows: any[]) => {
-  return rows.map((row: any) => {
+import { QueryResultRow } from "pg";
+
+export const toCamelCase = (rows: QueryResultRow[]) => {
+  return rows.map((row) => {
     const replaced: { [key: string]: any } = {};
 
     for (let key in row) {

@@ -42,7 +42,8 @@ const deleteVehicle = async (req, res) => {
     if (!vehicle) {
         return res.status(http_status_codes_1.StatusCodes.NOT_FOUND).json({ msg: "Vehicle not found" });
     }
-    if (parseInt(vehicle.userId) !== userId) {
+    // if (parseInt(vehicle.userId) !== userId)
+    if (vehicle.userId !== userId) {
         return res
             .status(http_status_codes_1.StatusCodes.FORBIDDEN)
             .json({ msg: "Unauthorized action" });
@@ -53,8 +54,7 @@ const deleteVehicle = async (req, res) => {
 exports.deleteVehicle = deleteVehicle;
 const getUserVehicles = async (req, res) => {
     const userId = parseInt(req.params.userId);
-    //change type
-    if (parseInt(req.userId) !== userId) {
+    if (req.userId !== userId) {
         return res.status(http_status_codes_1.StatusCodes.FORBIDDEN).json({ msg: "Unauthorized" });
     }
     const user = await userAuthRepo_1.default.findById(userId);

@@ -2,9 +2,17 @@ import { toCamelCase } from "../utils";
 import pool from "../pool";
 import AdminRepo from "./adminRepo";
 
+/**
+ * @class UserRepo
+ * @description UserRepo is responsible for handling database queries related to users.
+ * @ImportantNote "as any" is used in methods due to a TypeScript error.
+ * The pg library accepts numbers for query parameters, but TypeScript expects strings.
+ * This type assertion is necessary to align the data types with the library's expectations.
+ */
+
 class UserRepo {
   static async addVehicle(
-    userId: any,
+    userId: number,
     name: string,
     stateNumber: string,
     type: string,
@@ -16,23 +24,23 @@ class UserRepo {
     }
 
     const result = await pool.query(
-      `INSERT INTO vehicles (user_id, name, state_number, type) VALUES ($1, $2, $3, $4) RETURNING *;`,
-      [userId, name, stateNumber, type]
+      `INSERT INTO vehicles (user_id, name, state_number, type, parking_zone_id) VALUES ($1, $2, $3, $4, $5) RETURNING *;`,
+      [userId as any, name, stateNumber, type, parkingZoneId]
     );
     const { rows } = result || { rows: [] };
     return toCamelCase(rows)[0];
   }
 
   static async editVehicle(
-    vehicleId: any,
+    vehicleId: number,
     name: string,
     stateNumber: string,
     type: string,
-    parkingZoneId: any
+    parkingZoneId: number | string
   ) {
     const result = await pool.query(
       `UPDATE vehicles SET name = $2, state_number = $3, type = $4, parking_zone_id = $5 WHERE id = $1 RETURNING *;`,
-      [vehicleId, name, stateNumber, type, parkingZoneId]
+      [vehicleId as any, name, stateNumber, type, parkingZoneId as any]
     );
     const { rows } = result || { rows: [] };
     return toCamelCase(rows)[0];
@@ -53,7 +61,7 @@ class UserRepo {
       [userId]
     );
     const { rows } = result || { rows: [] };
-    return toCamelCase(rows)[0];
+    return toCamelCase(rows);
   }
 
   static async findVehicleById(vehicleId: number) {

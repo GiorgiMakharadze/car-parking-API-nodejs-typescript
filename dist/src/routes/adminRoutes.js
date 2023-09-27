@@ -10,7 +10,6 @@ const router = (0, express_1.Router)();
 //   message:
 //     "Too many requests from this IP address,please try again after 15 minutes",
 // });
-//Admin route
 router
     .route("/get-all-users")
     .get(utils_1.authenticateToken, utils_1.adminValidation, adminController_1.getAllUsers);
@@ -30,4 +29,7 @@ router
     .get(utils_1.authenticateToken, utils_1.adminValidation, adminController_1.getParkingZoneById)
     .delete(utils_1.authenticateToken, utils_1.adminValidation, adminController_1.deleteParkingZone)
     .patch(utils_1.authenticateToken, utils_1.adminValidation, adminController_1.updateParkingZone);
+router
+    .route("/parking-history")
+    .get(utils_1.authenticateToken, utils_1.adminValidation, adminController_1.viewParkingHistory);
 exports.default = router;

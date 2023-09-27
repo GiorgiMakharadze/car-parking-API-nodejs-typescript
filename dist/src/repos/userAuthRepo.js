@@ -8,7 +8,7 @@ const pool_1 = __importDefault(require("../pool"));
 /**
  * @class AuthUserRepo
  * @description UserRepo is responsible for handling database queries related to users.
- * "as any" is used in methods due to a TypeScript error.
+ * @ImportantNote "as any" is used in methods due to a TypeScript error.
  * The pg library accepts numbers for query parameters, but TypeScript expects strings.
  * This type assertion is necessary to align the data types with the library's expectations.
  */

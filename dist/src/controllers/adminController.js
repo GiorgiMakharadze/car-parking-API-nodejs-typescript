@@ -14,7 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteParkingZone = exports.updateParkingZone = exports.getParkingZoneById = exports.getAllParkingZones = exports.createParkingZone = exports.makeUserAdmin = exports.deleteUser = exports.getUserById = exports.getAllUsers = void 0;
+exports.viewParkingHistory = exports.deleteParkingZone = exports.updateParkingZone = exports.getParkingZoneById = exports.getAllParkingZones = exports.createParkingZone = exports.makeUserAdmin = exports.deleteUser = exports.getUserById = exports.getAllUsers = void 0;
 const http_status_codes_1 = require("http-status-codes");
 const userAuthRepo_1 = __importDefault(require("../repos/userAuthRepo"));
 const adminRepo_1 = __importDefault(require("../repos/adminRepo"));
@@ -165,3 +165,8 @@ const deleteParkingZone = async (req, res) => {
         .json({ msg: `Parking zone wit id ${zoneId} is deleted` });
 };
 exports.deleteParkingZone = deleteParkingZone;
+const viewParkingHistory = async (_req, res) => {
+    const parkingHistories = await adminRepo_1.default.findAllParkingHistories();
+    res.status(http_status_codes_1.StatusCodes.OK).json(parkingHistories);
+};
+exports.viewParkingHistory = viewParkingHistory;

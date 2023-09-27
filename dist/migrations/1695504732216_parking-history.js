@@ -12,6 +12,7 @@ async function up(pgm) {
         start_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         end_time TIMESTAMP,
         cost DECIMAL CHECK (cost >= 0) NOT NULL,
+        status VARCHAR(255) DEFAULT 'active',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );

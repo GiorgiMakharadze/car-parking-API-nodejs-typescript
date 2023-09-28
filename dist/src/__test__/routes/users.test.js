@@ -11,7 +11,7 @@ const baseUrl = "/api/v1";
 beforeAll(async () => {
     return pool_1.default.connect({
         host: "postgres_test",
-        port: 5433,
+        port: 5432,
         database: "carparkingtest",
         user: process.env.PGUSERTEST,
         password: process.env.PGPASSWORDTEST,
@@ -36,3 +36,4 @@ it("create a user", async () => {
     const finishCount = await userAuthRepo_1.default.countUsers();
     expect(finishCount).toHaveBeenCalledTimes(1);
 }, 10000);
+//You can write other test here

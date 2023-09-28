@@ -33,12 +33,10 @@ redisClient.on("error", (err) => {
 const queryWithCache = async (query, params, cacheKey) => {
     const cacheValue = await redisClient.hGet(cacheKey, query);
     if (cacheValue) {
-        console.log("SERVING FROM CACHE");
         return JSON.parse(cacheValue);
     }
     const result = await pool_1.default.query(query, params);
     const rows = result === null || result === void 0 ? void 0 : result.rows;
-    console.log("SERVING FROM POSTGRESQL");
     redisClient
         .hSet(cacheKey, query, JSON.stringify(rows))
         .then(() => {

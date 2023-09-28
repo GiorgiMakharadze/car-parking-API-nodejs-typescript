@@ -40,7 +40,6 @@ export const authenticateToken = async (
       .status(StatusCodes.UNAUTHORIZED)
       .json({ msg: "User does not exist" });
   }
-  console.log("Middleware: User ID set as: ", user.id);
   const stableFields = {
     id: user.id,
     username: user.username,

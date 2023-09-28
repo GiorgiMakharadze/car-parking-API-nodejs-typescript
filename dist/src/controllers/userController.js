@@ -109,10 +109,6 @@ const reserveParkingZone = async (req, res) => {
     if (!parkingZone) {
         throw new errors_1.NotFoundError(`No Parking zone  with id: ${parkingZoneId}`);
     }
-    const reservations = await userRepo_1.default.findReservationsByUserId(userId);
-    if (!reservations.length) {
-        throw new errors_1.NotFoundError("No reservations found for this user");
-    }
     const userBalance = 100;
     const cost = parkingZone.hourlyCost * hours;
     if (userBalance < cost) {
@@ -159,10 +155,10 @@ const getReservation = async (req, res) => {
     const reservationId = parseInt(req.params.reservationId);
     const currentUserId = req.userId;
     const reservation = await userRepo_1.default.findReservationById(reservationId);
-    if (!reservation || reservation.userId !== currentUserId) {
-        throw new errors_1.NotFoundError("No reservations found for this user");
+    if (!reservation) {
+        throw new errors_1.NotFoundError("Reservation not found");
     }
-    if (currentUserId !== reservationId) {
+    if (currentUserId !== reservation.userId) {
         throw new errors_1.UnauthorizedError("Unauthorized");
     }
     res.status(http_status_codes_1.StatusCodes.OK).json(reservation);
@@ -178,12 +174,12 @@ exports.getReservation = getReservation;
 const deleteReservation = async (req, res) => {
     const reservationId = parseInt(req.params.reservationId);
     const currentUserId = req.userId;
-    if (currentUserId !== reservationId) {
-        throw new errors_1.UnauthorizedError("Unauthorized");
-    }
     const reservation = await userRepo_1.default.findReservationById(reservationId);
-    if (!reservation || reservation.userId !== currentUserId) {
-        throw new errors_1.NotFoundError("No reservations found for this user");
+    if (!reservation) {
+        throw new errors_1.NotFoundError("Reservation not found");
+    }
+    if (currentUserId !== reservation.userId) {
+        throw new errors_1.UnauthorizedError("Unauthorized");
     }
     await userRepo_1.default.deleteReservation(reservationId);
     res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "Reservation deleted" });

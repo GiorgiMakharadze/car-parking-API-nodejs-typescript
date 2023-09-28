@@ -37,14 +37,12 @@ export const queryWithCache = async (
 ) => {
   const cacheValue = await redisClient.hGet(cacheKey, query);
   if (cacheValue) {
-    console.log("SERVING FROM CACHE");
     return JSON.parse(cacheValue);
   }
 
   const result = await pool.query(query, params);
   const rows = result?.rows;
 
-  console.log("SERVING FROM POSTGRESQL");
   redisClient
     .hSet(cacheKey, query, JSON.stringify(rows))
     .then(() => {

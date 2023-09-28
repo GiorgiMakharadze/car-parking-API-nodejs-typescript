@@ -131,10 +131,6 @@ const reserveParkingZone = async (req: CustomRequest, res: Response) => {
     throw new NotFoundError(`No Parking zone  with id: ${parkingZoneId}`);
   }
 
-  const reservations = await UserRepo.findReservationsByUserId(userId);
-  if (!reservations.length) {
-    throw new NotFoundError("No reservations found for this user");
-  }
   const userBalance = 100;
   const cost = parkingZone.hourlyCost * hours;
   if (userBalance < cost) {
@@ -195,11 +191,12 @@ const getReservation = async (req: CustomRequest, res: Response) => {
   const currentUserId = req.userId;
 
   const reservation = await UserRepo.findReservationById(reservationId);
-  if (!reservation || reservation.userId !== currentUserId) {
-    throw new NotFoundError("No reservations found for this user");
+
+  if (!reservation) {
+    throw new NotFoundError("Reservation not found");
   }
 
-  if (currentUserId !== reservationId) {
+  if (currentUserId !== reservation.userId) {
     throw new UnauthorizedError("Unauthorized");
   }
 
@@ -217,13 +214,14 @@ const deleteReservation = async (req: CustomRequest, res: Response) => {
   const reservationId = parseInt(req.params.reservationId);
   const currentUserId = req.userId;
 
-  if (currentUserId !== reservationId) {
-    throw new UnauthorizedError("Unauthorized");
+  const reservation = await UserRepo.findReservationById(reservationId);
+
+  if (!reservation) {
+    throw new NotFoundError("Reservation not found");
   }
 
-  const reservation = await UserRepo.findReservationById(reservationId);
-  if (!reservation || reservation.userId !== currentUserId) {
-    throw new NotFoundError("No reservations found for this user");
+  if (currentUserId !== reservation.userId) {
+    throw new UnauthorizedError("Unauthorized");
   }
 
   await UserRepo.deleteReservation(reservationId);

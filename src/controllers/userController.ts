@@ -3,61 +3,27 @@ import { StatusCodes } from "http-status-codes";
 import UserRepo from "../repos/userRepo";
 import { validateVehicleInput, validateParkingZoneExistence } from "../utils";
 import AuthUserRepo from "../repos/userAuthRepo";
-import { CustomRequest } from "../types/RequestTypes";
 import AdminRepo from "../repos/adminRepo";
 
-const reserveParkingZoneAddVehicle = async (req: Request, res: Response) => {
+const addVehicle = async (req: Request, res: Response) => {
   const userId = parseInt(req.params.userId);
-  const { name, stateNumber, type, parkingZoneId, vehicleId, hours } = req.body;
+  const { name, stateNumber, type } = req.body;
 
   validateVehicleInput(name, stateNumber, type);
-  await validateParkingZoneExistence(parkingZoneId);
-  const user = await AuthUserRepo.findById(userId);
-  if (!user) {
-    return res.status(StatusCodes.NOT_FOUND).json({ msg: "User not found" });
-  }
-  const parkingZone = await AdminRepo.findParkingZoneById(parkingZoneId);
-  if (!parkingZone) {
-    return res
-      .status(StatusCodes.NOT_FOUND)
-      .json({ msg: "Parking zone not found" });
-  }
-
-  const endTime = new Date();
-  endTime.setHours(endTime.getHours() + hours);
-
-  const cost = hours * parkingZone.hourlyCost;
-  if (user.balance < cost) {
-    return res
-      .status(StatusCodes.BAD_REQUEST)
-      .json({ msg: "Insufficient balance" });
-  }
 
   const newVehicle = await UserRepo.addVehicle(
-    userId,
+    userId as any,
     name,
     stateNumber,
-    type,
-    parkingZoneId
+    type
   );
-  await UserRepo.addParkingHistory(
-    userId,
-    vehicleId || newVehicle.id,
-    parkingZoneId,
-    endTime,
-    cost
-  );
-  await UserRepo.updateBalance(userId, user.balance - cost);
-
-  res
-    .status(StatusCodes.OK)
-    .json({ msg: "Reservation and vehicle addition successful", endTime });
+  res.status(StatusCodes.CREATED).json(newVehicle);
 };
 
 const editVehicle = async (req: Request, res: Response) => {
   const userId = parseInt(req.params.userId);
   const vehicleId = parseInt(req.params.vehicleId);
-  const { name, stateNumber, type, parkingZoneId } = req.body;
+  const { name, stateNumber, type } = req.body;
 
   validateVehicleInput(name, stateNumber, type);
 
@@ -76,8 +42,7 @@ const editVehicle = async (req: Request, res: Response) => {
     vehicleId,
     name,
     stateNumber,
-    type,
-    parkingZoneId
+    type
   );
   res.status(StatusCodes.OK).json(updatedVehicle);
 };
@@ -90,7 +55,8 @@ const deleteVehicle = async (req: Request, res: Response) => {
   if (!vehicle) {
     return res.status(StatusCodes.NOT_FOUND).json({ msg: "Vehicle not found" });
   }
-  if (vehicle.userId !== userId) {
+
+  if (parseInt(vehicle.userId) !== userId) {
     return res
       .status(StatusCodes.FORBIDDEN)
       .json({ msg: "Unauthorized action" });
@@ -100,10 +66,10 @@ const deleteVehicle = async (req: Request, res: Response) => {
   res.status(StatusCodes.OK).json({ msg: "Vehicle deleted" });
 };
 
-const getUserVehicles = async (req: CustomRequest, res: Response) => {
+const getUserVehicles = async (req: any, res: Response) => {
   const userId = parseInt(req.params.userId);
 
-  if (req.userId !== userId) {
+  if (parseInt(req.userId) !== userId) {
     return res.status(StatusCodes.FORBIDDEN).json({ msg: "Unauthorized" });
   }
 
@@ -116,9 +82,48 @@ const getUserVehicles = async (req: CustomRequest, res: Response) => {
   res.status(StatusCodes.OK).json(vehicles);
 };
 
+const reserveParkingZone = async (req: Request, res: Response) => {
+  const userId = parseInt(req.params.userId);
+  const { parkingZoneId, vehicleId, hours } = req.body;
+
+  const parkingZone = await AdminRepo.findParkingZoneById(parkingZoneId);
+  if (!parkingZone) {
+    return res
+      .status(StatusCodes.NOT_FOUND)
+      .json({ msg: "Parking Zone not found" });
+  }
+
+  const userBalance = 100;
+  const cost = parkingZone.hourlyCost * hours;
+  if (userBalance < cost) {
+    return res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ msg: "Insufficient balance" });
+  }
+
+  const endTime = new Date();
+  endTime.setHours(endTime.getHours() + hours);
+
+  await UserRepo.addParkingHistory(
+    userId,
+    vehicleId,
+    parkingZoneId,
+    endTime,
+    cost
+  );
+  console.log("UserId:", userId);
+  console.log("Body:", req.body);
+
+  const newBalance = userBalance - cost;
+  await UserRepo.updateBalance(userId, newBalance);
+
+  res.status(StatusCodes.OK).json({ msg: "Reservation successful", endTime });
+};
+
 export {
-  reserveParkingZoneAddVehicle,
+  addVehicle,
   editVehicle,
   deleteVehicle,
   getUserVehicles,
+  reserveParkingZone,
 };

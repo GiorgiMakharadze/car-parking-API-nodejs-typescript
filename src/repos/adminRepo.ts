@@ -157,7 +157,12 @@ class AdminRepo {
       JOIN vehicles v ON ph.vehicle_id = v.id
     `);
     const { rows } = result || { rows: [] };
-    return toCamelCase(rows);
+    const histories = toCamelCase(rows);
+    const currentTime = new Date();
+    histories.forEach((history) => {
+      history.status = history.endTime < currentTime ? "expired" : "active";
+    });
+    return histories;
   }
 }
 

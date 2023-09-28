@@ -1,5 +1,6 @@
 import express from "express";
 import "express-async-errors";
+import cors from "cors";
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import xss from "xss";
@@ -21,6 +22,15 @@ const createApp = () => {
 
   app.use(helmet());
   app.use(cookieParser());
+
+  app.use(
+    cors({
+      origin: true,
+      credentials: true,
+      allowedHeaders: ["Content-Type", "Authorization", "x-csrf-token"],
+      methods: ["GET", "POST", "PATCH", "DELETE"],
+    })
+  );
 
   app.use((req, res, next) => {
     if (req.body) {

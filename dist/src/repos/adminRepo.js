@@ -120,7 +120,12 @@ class AdminRepo {
       JOIN vehicles v ON ph.vehicle_id = v.id
     `);
         const { rows } = result || { rows: [] };
-        return (0, utils_1.toCamelCase)(rows);
+        const histories = (0, utils_1.toCamelCase)(rows);
+        const currentTime = new Date();
+        histories.forEach((history) => {
+            history.status = history.endTime < currentTime ? "expired" : "active";
+        });
+        return histories;
     }
 }
 exports.default = AdminRepo;

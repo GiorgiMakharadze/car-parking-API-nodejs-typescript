@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 require("express-async-errors");
+const cors_1 = __importDefault(require("cors"));
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const helmet_1 = __importDefault(require("helmet"));
 const xss_1 = __importDefault(require("xss"));
@@ -18,6 +19,12 @@ const createApp = () => {
     app.use(express_1.default.json());
     app.use((0, helmet_1.default)());
     app.use((0, cookie_parser_1.default)());
+    app.use((0, cors_1.default)({
+        origin: true,
+        credentials: true,
+        allowedHeaders: ["Content-Type", "Authorization", "x-csrf-token"],
+        methods: ["GET", "POST", "PATCH", "DELETE"],
+    }));
     app.use((req, res, next) => {
         if (req.body) {
             req.body = JSON.parse((0, xss_1.default)(JSON.stringify(req.body)));

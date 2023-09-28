@@ -5,7 +5,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const utils_1 = require("../utils");
 const pool_1 = __importDefault(require("../pool"));
-const adminRepo_1 = __importDefault(require("./adminRepo"));
 /**
  * @class UserRepo
  * @description UserRepo is responsible for handling database queries related to users.
@@ -14,17 +13,13 @@ const adminRepo_1 = __importDefault(require("./adminRepo"));
  * This type assertion is necessary to align the data types with the library's expectations.
  */
 class UserRepo {
-    static async addVehicle(userId, name, stateNumber, type, parkingZoneId) {
-        const parkingZone = await adminRepo_1.default.findParkingZoneById(parkingZoneId);
-        if (!parkingZone) {
-            throw new Error(`Parking zone with id ${parkingZoneId} not found`);
-        }
-        const result = await pool_1.default.query(`INSERT INTO vehicles (user_id, name, state_number, type, parking_zone_id) VALUES ($1, $2, $3, $4, $5) RETURNING *;`, [userId, name, stateNumber, type, parkingZoneId]);
+    static async addVehicle(userId, name, stateNumber, type) {
+        const result = await pool_1.default.query(`INSERT INTO vehicles (user_id, name, state_number, type) VALUES ($1, $2, $3, $4) RETURNING *;`, [userId, name, stateNumber, type]);
         const { rows } = result || { rows: [] };
         return (0, utils_1.toCamelCase)(rows)[0];
     }
-    static async editVehicle(vehicleId, name, stateNumber, type, parkingZoneId) {
-        const result = await pool_1.default.query(`UPDATE vehicles SET name = $2, state_number = $3, type = $4, parking_zone_id = $5 WHERE id = $1 RETURNING *;`, [vehicleId, name, stateNumber, type, parkingZoneId]);
+    static async editVehicle(vehicleId, name, stateNumber, type) {
+        const result = await pool_1.default.query(`UPDATE vehicles SET name = $2, state_number = $3, type = $4 WHERE id = $1 RETURNING *;`, [vehicleId, name, stateNumber, type]);
         const { rows } = result || { rows: [] };
         return (0, utils_1.toCamelCase)(rows)[0];
     }
@@ -50,7 +45,18 @@ class UserRepo {
         const { rows } = result || { rows: [] };
         return (0, utils_1.toCamelCase)(rows)[0];
     }
+    static async deleteReservation(reservationId) {
+        const result = await pool_1.default.query(`DELETE FROM parking_history WHERE id = $1 RETURNING *;`, [reservationId]);
+        const { rows } = result || { rows: [] };
+        return (0, utils_1.toCamelCase)(rows)[0];
+    }
+    static async findReservationById(reservationId) {
+        const result = await pool_1.default.query(`SELECT * FROM parking_history WHERE id = $1;`, [reservationId]);
+        const { rows } = result || { rows: [] };
+        return rows.length ? (0, utils_1.toCamelCase)(rows)[0] : null;
+    }
     static async updateBalance(userId, newBalance) {
+        console.log("Updating to new balance:", newBalance);
         const result = await pool_1.default.query(`UPDATE users SET balance = $2 WHERE id = $1 RETURNING *;`, [userId, newBalance]);
         const { rows } = result || { rows: [] };
         return (0, utils_1.toCamelCase)(rows)[0];

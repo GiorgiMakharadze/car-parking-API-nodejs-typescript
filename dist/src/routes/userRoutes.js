@@ -9,12 +9,13 @@ const utils_1 = require("../utils");
 const router = express_1.default.Router();
 router
     .route("/:userId/vehicles")
-    .get(utils_1.authenticateToken, utils_1.userValidation, userController_1.getUserVehicles);
-router
-    .route("/:userId/reserve-and-add-vehicle")
-    .post(utils_1.authenticateToken, utils_1.userValidation, userController_1.reserveParkingZoneAddVehicle);
+    .get(utils_1.authenticateToken, utils_1.userValidation, userController_1.getUserVehicles)
+    .post(utils_1.authenticateToken, utils_1.userValidation, userController_1.addVehicle);
 router
     .route("/:userId/vehicles/:vehicleId")
     .patch(utils_1.authenticateToken, utils_1.userValidation, userController_1.editVehicle)
     .delete(utils_1.authenticateToken, utils_1.userValidation, userController_1.deleteVehicle);
+router
+    .route("/:userId/reserve")
+    .post(utils_1.authenticateToken, utils_1.userValidation, userController_1.reserveParkingZone);
 exports.default = router;

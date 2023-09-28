@@ -12,20 +12,14 @@ import AdminRepo from "./adminRepo";
 
 class UserRepo {
   static async addVehicle(
-    userId: number,
+    userId: string,
     name: string,
     stateNumber: string,
-    type: string,
-    parkingZoneId: number
+    type: string
   ) {
-    const parkingZone = await AdminRepo.findParkingZoneById(parkingZoneId);
-    if (!parkingZone) {
-      throw new Error(`Parking zone with id ${parkingZoneId} not found`);
-    }
-
     const result = await pool.query(
-      `INSERT INTO vehicles (user_id, name, state_number, type, parking_zone_id) VALUES ($1, $2, $3, $4, $5) RETURNING *;`,
-      [userId as any, name, stateNumber, type, parkingZoneId]
+      `INSERT INTO vehicles (user_id, name, state_number, type) VALUES ($1, $2, $3, $4) RETURNING *;`,
+      [userId as any, name, stateNumber, type]
     );
     const { rows } = result || { rows: [] };
     return toCamelCase(rows)[0];
@@ -35,12 +29,11 @@ class UserRepo {
     vehicleId: number,
     name: string,
     stateNumber: string,
-    type: string,
-    parkingZoneId: number | string
+    type: string
   ) {
     const result = await pool.query(
-      `UPDATE vehicles SET name = $2, state_number = $3, type = $4, parking_zone_id = $5 WHERE id = $1 RETURNING *;`,
-      [vehicleId as any, name, stateNumber, type, parkingZoneId as any]
+      `UPDATE vehicles SET name = $2, state_number = $3, type = $4 WHERE id = $1 RETURNING *;`,
+      [vehicleId as any, name, stateNumber, type]
     );
     const { rows } = result || { rows: [] };
     return toCamelCase(rows)[0];
@@ -87,7 +80,26 @@ class UserRepo {
     return toCamelCase(rows)[0];
   }
 
+  static async deleteReservation(reservationId: number) {
+    const result = await pool.query(
+      `DELETE FROM parking_history WHERE id = $1 RETURNING *;`,
+      [reservationId]
+    );
+    const { rows } = result || { rows: [] };
+    return toCamelCase(rows)[0];
+  }
+
+  static async findReservationById(reservationId: number) {
+    const result = await pool.query(
+      `SELECT * FROM parking_history WHERE id = $1;`,
+      [reservationId]
+    );
+    const { rows } = result || { rows: [] };
+    return rows.length ? toCamelCase(rows)[0] : null;
+  }
+
   static async updateBalance(userId: number, newBalance: number) {
+    console.log("Updating to new balance:", newBalance);
     const result = await pool.query(
       `UPDATE users SET balance = $2 WHERE id = $1 RETURNING *;`,
       [userId, newBalance]

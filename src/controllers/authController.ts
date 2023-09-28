@@ -8,6 +8,13 @@ import crypto from "crypto";
 import "dotenv/config";
 import AuthUserRepo from "../repos/userAuthRepo";
 import { passwordStrength, setCookies } from "../utils";
+import {
+  AlreadyExistsError,
+  BadRequestError,
+  NotFoundError,
+  UnauthenticatedError,
+  UnauthorizedError,
+} from "../errors";
 
 const { privateKey, publicKey } = generateKeyPairSync("ed25519");
 const privateKeyPEM = privateKey.export({
@@ -32,40 +39,30 @@ const register = async (req: Request, res: Response) => {
     req.body;
 
   if (!username) {
-    return res
-      .status(StatusCodes.BAD_REQUEST)
-      .json({ msg: "Username is required" });
+    throw new BadRequestError("Please provide username");
   }
 
   if (!email || !validator.isEmail(email)) {
-    return res
-      .status(StatusCodes.BAD_REQUEST)
-      .json({ msg: "Valid email is required" });
+    throw new BadRequestError("Valid email is required");
   }
 
   if (!password) {
-    return res
-      .status(StatusCodes.BAD_REQUEST)
-      .json({ msg: "Password is required" });
+    throw new BadRequestError("Please provide password");
   }
 
   if (!passwordStrength(password)) {
-    return res.status(StatusCodes.BAD_REQUEST).json({
-      msg: "Weak password. It should be at least 10 characters long, contain a number and a special character.",
-    });
+    throw new BadRequestError(
+      "Weak password. It should be at least 10 characters long, contain a number and a special character."
+    );
   }
 
   const existingUser = await AuthUserRepo.findByEmail(email);
   if (existingUser) {
-    return res
-      .status(StatusCodes.CONFLICT)
-      .json({ msg: "User already exists" });
+    throw new AlreadyExistsError("User already exists");
   }
 
   if (!securityQuestion || !securityAnswer) {
-    return res
-      .status(StatusCodes.BAD_REQUEST)
-      .json({ msg: "Security question and answer are required" });
+    throw new BadRequestError("Security question and answer are required");
   }
 
   const hashedPassword = await bcrypt.hash(password, 12);
@@ -100,41 +97,29 @@ const register = async (req: Request, res: Response) => {
 const logIn = async (req: Request, res: Response) => {
   const { email, password } = req.body;
 
-  if (!email) {
-    return res
-      .status(StatusCodes.BAD_REQUEST)
-      .json({ msg: "Email is required" });
-  }
-
-  if (!validator.isEmail(email)) {
-    return res
-      .status(StatusCodes.BAD_REQUEST)
-      .json({ msg: "Invalid email format" });
+  if (!email || !validator.isEmail(email)) {
+    throw new BadRequestError("Valid email is required");
   }
 
   if (!password) {
-    return res
-      .status(StatusCodes.BAD_REQUEST)
-      .json({ msg: "Password is required" });
+    throw new BadRequestError("Please provide password");
   }
 
   const user = await AuthUserRepo.findByEmail(email);
   if (!user) {
-    return res.status(StatusCodes.UNAUTHORIZED).json({ msg: "User not found" });
+    throw new UnauthenticatedError("User not found");
   }
 
   if (user.failedLoginAttempts >= MAX_LOGIN_ATTEMPTS) {
-    return res
-      .status(StatusCodes.FORBIDDEN)
-      .json({ msg: "Your account is suspended. Please reset your password." });
+    throw new UnauthorizedError(
+      "Your account is suspended. Please reset your password."
+    );
   }
 
   const isValidPassword = await bcrypt.compare(password, user.password);
   if (!isValidPassword) {
     await AuthUserRepo.incrementFailedLoginAttempts(user.id);
-    return res
-      .status(StatusCodes.UNAUTHORIZED)
-      .json({ msg: "Invalid credentials" });
+    throw new UnauthenticatedError("Invalid Credentials");
   }
 
   await AuthUserRepo.resetFailedLoginAttempts(user.id);
@@ -170,38 +155,30 @@ const resetPassword = async (req: Request, res: Response) => {
   const { email, securityAnswer, newPassword } = req.body;
 
   if (!email) {
-    return res
-      .status(StatusCodes.BAD_REQUEST)
-      .json({ msg: "Email is required" });
+    throw new BadRequestError("Please provide email");
   }
 
   if (!securityAnswer) {
-    return res
-      .status(StatusCodes.BAD_REQUEST)
-      .json({ msg: "Security answer is required" });
+    throw new BadRequestError("Please provide security answer");
   }
 
   if (!newPassword) {
-    return res
-      .status(StatusCodes.BAD_REQUEST)
-      .json({ msg: "New password is required" });
+    throw new BadRequestError("Please provide new password");
   }
 
   if (!passwordStrength(newPassword)) {
-    return res.status(StatusCodes.BAD_REQUEST).json({
-      msg: "Weak password. It should be at least 10 characters long, contain a number and a special character.",
-    });
+    throw new BadRequestError(
+      "Weak password. It should be at least 10 characters long, contain a number and a special character"
+    );
   }
 
   const user = await AuthUserRepo.findByEmail(email);
   if (!user) {
-    return res.status(StatusCodes.NOT_FOUND).json({ msg: "User not found" });
+    throw new NotFoundError("User not found");
   }
 
   if (user.securityAnswer !== securityAnswer) {
-    return res
-      .status(StatusCodes.UNAUTHORIZED)
-      .json({ msg: "Invalid security answer" });
+    throw new UnauthenticatedError("Invalid Security answer");
   }
 
   const hashedPassword = await bcrypt.hash(newPassword, 12);
@@ -234,22 +211,16 @@ const refreshTokenHandler = async (req: Request, res: Response) => {
   const { refreshToken } = req.cookies;
 
   if (!refreshToken) {
-    return res
-      .status(StatusCodes.BAD_REQUEST)
-      .json({ msg: "No refresh token provided" });
+    throw new BadRequestError("No refresh token provided");
   }
 
   const user = await AuthUserRepo.findByRefreshToken(refreshToken);
   if (!user) {
-    return res
-      .status(StatusCodes.UNAUTHORIZED)
-      .json({ msg: "Invalid refresh token" });
+    throw new UnauthenticatedError("Invalid refresh token");
   }
 
   if (new Date() > user.refreshTokenExpiresAt) {
-    return res
-      .status(StatusCodes.UNAUTHORIZED)
-      .json({ msg: "Refresh token has expired" });
+    throw new UnauthenticatedError("Refresh token has expired");
   }
 
   await AuthUserRepo.saveRefreshToken(user.id, null);
@@ -281,16 +252,12 @@ const logOut = async (req: Request, res: Response) => {
   const { refreshToken } = req.cookies;
 
   if (!refreshToken) {
-    return res
-      .status(StatusCodes.BAD_REQUEST)
-      .json({ msg: "No refresh token provided" });
+    throw new BadRequestError("No refresh token provided");
   }
 
   const user = await AuthUserRepo.findByRefreshToken(refreshToken);
   if (!user) {
-    return res
-      .status(StatusCodes.UNAUTHORIZED)
-      .json({ msg: "Invalid refresh token" });
+    throw new UnauthenticatedError("Invalid refresh token");
   }
 
   await AuthUserRepo.invalidateRefreshToken(user.id);

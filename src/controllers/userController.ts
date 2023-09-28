@@ -3,7 +3,7 @@ import { StatusCodes } from "http-status-codes";
 import UserRepo from "../repos/userRepo";
 import AuthUserRepo from "../repos/userAuthRepo";
 import AdminRepo from "../repos/adminRepo";
-import { validateVehicleInput, findVehicle, findReservation } from "../utils";
+import { validateVehicleInput, findVehicle } from "../utils";
 import { CustomRequest } from "../types/RequestTypes";
 import { BadRequestError, NotFoundError, UnauthorizedError } from "../errors";
 
@@ -39,7 +39,7 @@ const addVehicle = async (req: CustomRequest, res: Response) => {
  * @param {Request} req - Express request object containing the user ID in params.
  * @param {Response} res - Express response object used to send the response back to the client.
  */
-const getUserVehicles = async (req: any, res: Response) => {
+const getUserVehicles = async (req: CustomRequest, res: Response) => {
   const userId = parseInt(req.params.userId);
 
   if (parseInt(req.userId) !== userId) {
@@ -62,7 +62,7 @@ const getUserVehicles = async (req: any, res: Response) => {
  * @param {Request} req - Express request object containing the vehicle details and IDs in params and body.
  * @param {Response} res - Express response object used to send the response back to the client.
  */
-const editVehicle = async (req: any, res: Response) => {
+const editVehicle = async (req: CustomRequest, res: Response) => {
   const userId = parseInt(req.params.userId);
   const vehicleId = parseInt(req.params.vehicleId);
   const { name, stateNumber, type } = req.body;
@@ -94,7 +94,7 @@ const editVehicle = async (req: any, res: Response) => {
  * @param {Request} req - Express request object containing the user ID and vehicle ID in params.
  * @param {Response} res - Express response object used to send the response back to the client.
  */
-const deleteVehicle = async (req: any, res: Response) => {
+const deleteVehicle = async (req: CustomRequest, res: Response) => {
   const userId = parseInt(req.params.userId);
   const vehicleId = parseInt(req.params.vehicleId);
 
@@ -168,11 +168,8 @@ const reserveParkingZone = async (req: CustomRequest, res: Response) => {
  * @param {CustomRequest} req - Express request object with user ID.
  * @param {Response} res - Express response object.
  */
-const userReservations = async (req: any, res: Response) => {
+const userReservations = async (req: CustomRequest, res: Response) => {
   const userId = parseInt(req.params.userId);
-  const currentUserId = req.userId;
-  console.log("userId from params:", userId);
-  console.log("currentUserId from req:", currentUserId);
 
   if (parseInt(req.userId) !== userId) {
     throw new UnauthorizedError("Unauthorized");

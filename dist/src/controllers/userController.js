@@ -161,17 +161,12 @@ exports.userReservations = userReservations;
 const getReservation = async (req, res) => {
     const reservationId = parseInt(req.params.reservationId);
     const currentUserId = req.userId;
-    if (currentUserId !== reservationId) {
-        throw new errors_1.UnauthorizedError("Unauthorized");
-    }
     const reservation = await userRepo_1.default.findReservationById(reservationId);
-    // if (!reservation || reservation.userId !== currentUserId) {
-    //   return res
-    //     .status(StatusCodes.NOT_FOUND)
-    //     .json({ msg: "Reservation not found or Unauthorized action" });
-    // }
     if (!reservation || reservation.userId !== currentUserId) {
         throw new errors_1.NotFoundError("No reservations found for this user");
+    }
+    if (currentUserId !== reservationId) {
+        throw new errors_1.UnauthorizedError("Unauthorized");
     }
     res.status(http_status_codes_1.StatusCodes.OK).json(reservation);
 };
@@ -190,11 +185,6 @@ const deleteReservation = async (req, res) => {
         throw new errors_1.UnauthorizedError("Unauthorized");
     }
     const reservation = await userRepo_1.default.findReservationById(reservationId);
-    // if (!reservation || reservation.userId !== currentUserId) {
-    //   return res
-    //     .status(StatusCodes.NOT_FOUND)
-    //     .json({ msg: "Reservation not found or Unauthorized action" });
-    // }
     if (!reservation || reservation.userId !== currentUserId) {
         throw new errors_1.NotFoundError("No reservations found for this user");
     }

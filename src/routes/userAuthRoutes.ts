@@ -6,14 +6,16 @@ import {
   resetPassword,
   logOut,
 } from "../controllers/authController";
-import { userValidation, authenticateToken } from "../utils";
+import { userValidation, authenticateToken, adminValidation } from "../utils";
 
 const router = Router();
 
 router.route("/register").post(register);
 router.route("/login").post(logIn);
 router.route("/reset-password").post(resetPassword);
-router.route("/logout").get(authenticateToken, userValidation, logOut);
+router
+  .route("/logout")
+  .get(authenticateToken, adminValidation, userValidation, logOut);
 router.route("/refresh-token").post(refreshTokenHandler);
 
 export default router;

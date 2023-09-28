@@ -11,6 +11,8 @@ import {
 import { validateVehicleInput } from "./validations/validateVehicles";
 import { findVehicle, findReservation } from "./userControllerRelatedFuncs";
 import { isAdmin } from "./validations/isAdmin";
+import { calculateChecksum } from "./calculateChecksum";
+import { privateKeyPEM, publicKeyPEM } from "./keyManager";
 
 export {
   adminValidation,
@@ -25,4 +27,7 @@ export {
   findVehicle,
   findReservation,
   isAdmin,
+  calculateChecksum,
+  privateKeyPEM,
+  publicKeyPEM,
 };

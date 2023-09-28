@@ -7,7 +7,12 @@ import { generateKeyPairSync } from "crypto";
 import crypto from "crypto";
 import "dotenv/config";
 import AuthUserRepo from "../repos/userAuthRepo";
-import { passwordStrength, setCookies } from "../utils";
+import {
+  passwordStrength,
+  setCookies,
+  calculateChecksum,
+  privateKeyPEM,
+} from "../utils";
 import {
   AlreadyExistsError,
   BadRequestError,
@@ -15,13 +20,6 @@ import {
   UnauthenticatedError,
   UnauthorizedError,
 } from "../errors";
-
-const { privateKey, publicKey } = generateKeyPairSync("ed25519");
-const privateKeyPEM = privateKey.export({
-  type: "pkcs8",
-  format: "pem",
-}) as string;
-export const publicKeyPEM = publicKey.export({ type: "spki", format: "pem" });
 
 const MAX_LOGIN_ATTEMPTS =
   parseInt(process.env.MAX_LOGIN_ATTEMPTS as string) || 3;
@@ -124,15 +122,11 @@ const logIn = async (req: Request, res: Response) => {
 
   await AuthUserRepo.resetFailedLoginAttempts(user.id);
 
-  const checksumData = {
+  const checksum = calculateChecksum({
     id: user.id,
     username: user.username,
     email: user.email,
-  };
-  const checksum = crypto
-    .createHash("sha256")
-    .update(JSON.stringify(checksumData))
-    .digest("hex");
+  });
   await AuthUserRepo.updateChecksum(user.id, checksum);
 
   const token = await paseto.sign({ userId: user.id, checksum }, privateKeyPEM);
@@ -186,15 +180,11 @@ const resetPassword = async (req: Request, res: Response) => {
   await AuthUserRepo.resetFailedLoginAttempts(user.id);
 
   const updatedUser = await AuthUserRepo.findById(user.id);
-  const updatedChecksumData = {
+  const updatedChecksum = calculateChecksum({
     id: updatedUser?.id,
     username: updatedUser?.username,
     email: updatedUser?.email,
-  };
-  const updatedChecksum = crypto
-    .createHash("sha256")
-    .update(JSON.stringify(updatedChecksumData))
-    .digest("hex");
+  });
   await AuthUserRepo.updateChecksum(user.id, updatedChecksum);
 
   res.status(StatusCodes.OK).json({ msg: "Password reset successfully" });
@@ -223,12 +213,12 @@ const refreshTokenHandler = async (req: Request, res: Response) => {
     throw new UnauthenticatedError("Refresh token has expired");
   }
 
-  await AuthUserRepo.saveRefreshToken(user.id, null);
+  const checksum = calculateChecksum({
+    id: user.id,
+    username: user.username,
+    email: user.email,
+  });
 
-  const checksum = crypto
-    .createHash("sha256")
-    .update(JSON.stringify(user))
-    .digest("hex");
   const newAccessToken = await paseto.sign(
     { userId: user.id, checksum },
     privateKeyPEM
@@ -241,7 +231,6 @@ const refreshTokenHandler = async (req: Request, res: Response) => {
 
   res.status(StatusCodes.OK).json({ token: newAccessToken });
 };
-
 /**
  * @function logOut
  * @description Logs out a user securely by invalidating the refresh token and clearing cookies.

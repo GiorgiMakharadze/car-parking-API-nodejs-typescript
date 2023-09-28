@@ -3,7 +3,7 @@ import { StatusCodes } from "http-status-codes";
 import { V2 as paseto } from "paseto";
 import crypto from "crypto";
 import AuthUserRepo from "../../repos/userAuthRepo";
-import { publicKeyPEM } from "../../controllers/authController";
+import { publicKeyPEM } from "../keyManager";
 import { CustomRequest, PayloadType } from "../../types/RequestTypes";
 
 /**

@@ -8,7 +8,7 @@ const http_status_codes_1 = require("http-status-codes");
 const paseto_1 = require("paseto");
 const crypto_1 = __importDefault(require("crypto"));
 const userAuthRepo_1 = __importDefault(require("../../repos/userAuthRepo"));
-const authController_1 = require("../../controllers/authController");
+const keyManager_1 = require("../keyManager");
 /**
  * Middleware to authenticate token present in cookies.
  * - Validates if token is present.
@@ -28,7 +28,7 @@ const authenticateToken = async (req, res, next) => {
             .status(http_status_codes_1.StatusCodes.UNAUTHORIZED)
             .json({ msg: "Token not provided" });
     }
-    const payload = (await paseto_1.V2.verify(token, authController_1.publicKeyPEM));
+    const payload = (await paseto_1.V2.verify(token, keyManager_1.publicKeyPEM));
     const user = await userAuthRepo_1.default.findById(payload.userId);
     if (!user) {
         console.warn(`Unauthorized access attempt detected from IP: ${req.ip}`);

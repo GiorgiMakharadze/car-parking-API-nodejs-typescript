@@ -3,23 +3,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.refreshTokenHandler = exports.resetPassword = exports.logOut = exports.logIn = exports.register = exports.publicKeyPEM = void 0;
+exports.refreshTokenHandler = exports.resetPassword = exports.logOut = exports.logIn = exports.register = void 0;
 const http_status_codes_1 = require("http-status-codes");
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const validator_1 = __importDefault(require("validator"));
 const paseto_1 = require("paseto");
-const crypto_1 = require("crypto");
-const crypto_2 = __importDefault(require("crypto"));
+const crypto_1 = __importDefault(require("crypto"));
 require("dotenv/config");
 const userAuthRepo_1 = __importDefault(require("../repos/userAuthRepo"));
 const utils_1 = require("../utils");
 const errors_1 = require("../errors");
-const { privateKey, publicKey } = (0, crypto_1.generateKeyPairSync)("ed25519");
-const privateKeyPEM = privateKey.export({
-    type: "pkcs8",
-    format: "pem",
-});
-exports.publicKeyPEM = publicKey.export({ type: "spki", format: "pem" });
 const MAX_LOGIN_ATTEMPTS = parseInt(process.env.MAX_LOGIN_ATTEMPTS) || 3;
 /**
  * @function register
@@ -90,18 +83,14 @@ const logIn = async (req, res) => {
         throw new errors_1.UnauthenticatedError("Invalid Credentials");
     }
     await userAuthRepo_1.default.resetFailedLoginAttempts(user.id);
-    const checksumData = {
+    const checksum = (0, utils_1.calculateChecksum)({
         id: user.id,
         username: user.username,
         email: user.email,
-    };
-    const checksum = crypto_2.default
-        .createHash("sha256")
-        .update(JSON.stringify(checksumData))
-        .digest("hex");
+    });
     await userAuthRepo_1.default.updateChecksum(user.id, checksum);
-    const token = await paseto_1.V2.sign({ userId: user.id, checksum }, privateKeyPEM);
-    const refreshToken = crypto_2.default.randomBytes(64).toString("hex");
+    const token = await paseto_1.V2.sign({ userId: user.id, checksum }, utils_1.privateKeyPEM);
+    const refreshToken = crypto_1.default.randomBytes(64).toString("hex");
     await userAuthRepo_1.default.saveRefreshToken(user.id, refreshToken);
     (0, utils_1.setCookies)(res, token, refreshToken);
     res.status(http_status_codes_1.StatusCodes.OK).json({ token });
@@ -139,15 +128,11 @@ const resetPassword = async (req, res) => {
     await userAuthRepo_1.default.updatePassword(user.id, hashedPassword);
     await userAuthRepo_1.default.resetFailedLoginAttempts(user.id);
     const updatedUser = await userAuthRepo_1.default.findById(user.id);
-    const updatedChecksumData = {
+    const updatedChecksum = (0, utils_1.calculateChecksum)({
         id: updatedUser === null || updatedUser === void 0 ? void 0 : updatedUser.id,
         username: updatedUser === null || updatedUser === void 0 ? void 0 : updatedUser.username,
         email: updatedUser === null || updatedUser === void 0 ? void 0 : updatedUser.email,
-    };
-    const updatedChecksum = crypto_2.default
-        .createHash("sha256")
-        .update(JSON.stringify(updatedChecksumData))
-        .digest("hex");
+    });
     await userAuthRepo_1.default.updateChecksum(user.id, updatedChecksum);
     res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "Password reset successfully" });
 };
@@ -171,13 +156,13 @@ const refreshTokenHandler = async (req, res) => {
     if (new Date() > user.refreshTokenExpiresAt) {
         throw new errors_1.UnauthenticatedError("Refresh token has expired");
     }
-    await userAuthRepo_1.default.saveRefreshToken(user.id, null);
-    const checksum = crypto_2.default
-        .createHash("sha256")
-        .update(JSON.stringify(user))
-        .digest("hex");
-    const newAccessToken = await paseto_1.V2.sign({ userId: user.id, checksum }, privateKeyPEM);
-    const newRefreshToken = crypto_2.default.randomBytes(64).toString("hex");
+    const checksum = (0, utils_1.calculateChecksum)({
+        id: user.id,
+        username: user.username,
+        email: user.email,
+    });
+    const newAccessToken = await paseto_1.V2.sign({ userId: user.id, checksum }, utils_1.privateKeyPEM);
+    const newRefreshToken = crypto_1.default.randomBytes(64).toString("hex");
     await userAuthRepo_1.default.saveRefreshToken(user.id, newRefreshToken);
     (0, utils_1.setCookies)(res, newAccessToken, newRefreshToken);
     res.status(http_status_codes_1.StatusCodes.OK).json({ token: newAccessToken });

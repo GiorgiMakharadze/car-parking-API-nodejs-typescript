@@ -42,7 +42,7 @@ A robust Car Parking Management System leveraging technologies such as Node.js, 
 
 ### DOCS
 
-[https://app.swaggerhub.com/apis/MAKHARADZEGIORGI00/cars-parking_api/1.0]
+[https://app.swaggerhub.com/apis-docs/MAKHARADZEGIORGI00/cars-parking_api/1.0]
 
 ### Prerequisites
 

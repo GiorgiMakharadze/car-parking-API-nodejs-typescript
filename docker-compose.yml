@@ -8,6 +8,7 @@ services:
     depends_on:
       - postgres
       - postgres_test
+      - redis
     env_file:
       - .env
     networks:
@@ -41,9 +42,20 @@ services:
     networks:
       - app-network
 
+  redis:
+    container_name: redis6
+    image: redis:6-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - app-network
+    volumes:
+      - redis_data:/data
+
 networks:
   app-network:
 
 volumes:
   postgres_data:
   postgres_test_data:
+  redis_data:

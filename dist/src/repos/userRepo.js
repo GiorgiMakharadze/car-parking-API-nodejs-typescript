@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const utils_1 = require("../utils");
 const pool_1 = __importDefault(require("../pool"));
+const cache_1 = require("../utils/cache");
 /**
  * @class UserRepo
  * @description UserRepo is responsible for handling database queries related to users.
@@ -25,6 +26,8 @@ class UserRepo {
     static async addVehicle(userId, name, stateNumber, type) {
         const result = await pool_1.default.query(`INSERT INTO vehicles (user_id, name, state_number, type) VALUES ($1, $2, $3, $4) RETURNING *;`, [userId, name, stateNumber, type]);
         const { rows } = result || { rows: [] };
+        const cacheKey = `user:${userId}:vehicles`;
+        await (0, cache_1.clearCache)(cacheKey);
         return (0, utils_1.toCamelCase)(rows)[0];
     }
     /**
@@ -34,7 +37,15 @@ class UserRepo {
      * @returns {Array} An array of user vehicles.
      */
     static async getUserVehicles(userId) {
-        const result = await pool_1.default.query(`SELECT * FROM vehicles WHERE user_id = $1;`, [userId]);
+        const cacheKey = `user:${userId}:vehicles`;
+        const query = `SELECT * FROM vehicles WHERE user_id = $1;`;
+        const params = [userId];
+        const cachedRows = await (0, cache_1.queryWithCache)(query, params, cacheKey);
+        if (cachedRows) {
+            return (0, utils_1.toCamelCase)(cachedRows);
+        }
+        // If cache miss or any issue with cache, fallback to DB query
+        const result = await pool_1.default.query(query, params);
         const { rows } = result || { rows: [] };
         return (0, utils_1.toCamelCase)(rows);
     }

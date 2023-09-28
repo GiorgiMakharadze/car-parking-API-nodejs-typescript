@@ -1,5 +1,6 @@
 import { toCamelCase } from "../utils";
 import pool from "../pool";
+import { queryWithCache, clearCache } from "../utils/cache";
 
 /**
  * @class UserRepo
@@ -29,6 +30,10 @@ class UserRepo {
       [userId as any, name, stateNumber, type]
     );
     const { rows } = result || { rows: [] };
+
+    const cacheKey = `user:${userId}:vehicles`;
+    await clearCache(cacheKey);
+
     return toCamelCase(rows)[0];
   }
 
@@ -39,10 +44,18 @@ class UserRepo {
    * @returns {Array} An array of user vehicles.
    */
   static async getUserVehicles(userId: number) {
-    const result = await pool.query(
-      `SELECT * FROM vehicles WHERE user_id = $1;`,
-      [userId]
-    );
+    const cacheKey = `user:${userId}:vehicles`;
+    const query = `SELECT * FROM vehicles WHERE user_id = $1;`;
+    const params = [userId];
+
+    const cachedRows = await queryWithCache(query, params, cacheKey);
+
+    if (cachedRows) {
+      return toCamelCase(cachedRows);
+    }
+
+    // If cache miss or any issue with cache, fallback to DB query
+    const result = await pool.query(query, params);
     const { rows } = result || { rows: [] };
     return toCamelCase(rows);
   }

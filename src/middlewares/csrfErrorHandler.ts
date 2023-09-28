@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 
-const csrfErrorHandler = (
+export const csrfErrorHandler = (
   err: any,
   req: Request,
   res: Response,
@@ -11,5 +11,3 @@ const csrfErrorHandler = (
   }
   next(err);
 };
-
-export default csrfErrorHandler;

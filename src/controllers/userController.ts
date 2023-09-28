@@ -5,6 +5,7 @@ import AuthUserRepo from "../repos/userAuthRepo";
 import AdminRepo from "../repos/adminRepo";
 import { validateVehicleInput, findVehicle, findReservation } from "../utils";
 import { CustomRequest } from "../types/RequestTypes";
+import { BadRequestError, NotFoundError, UnauthorizedError } from "../errors";
 
 /**
  * @function addVehicle
@@ -13,9 +14,13 @@ import { CustomRequest } from "../types/RequestTypes";
  * @param {Request} req - Express request object containing vehicle details like name, stateNumber, and type.
  * @param {Response} res - Express response object used to send the response back to the client.
  */
-const addVehicle = async (req: Request, res: Response) => {
+const addVehicle = async (req: CustomRequest, res: Response) => {
   const userId = parseInt(req.params.userId);
   const { name, stateNumber, type } = req.body;
+
+  if (parseInt(req.userId) !== userId) {
+    throw new UnauthorizedError("Unauthorized");
+  }
 
   validateVehicleInput(name, stateNumber, type);
   const newVehicle = await UserRepo.addVehicle(
@@ -38,12 +43,12 @@ const getUserVehicles = async (req: any, res: Response) => {
   const userId = parseInt(req.params.userId);
 
   if (parseInt(req.userId) !== userId) {
-    return res.status(StatusCodes.FORBIDDEN).json({ msg: "Unauthorized" });
+    throw new UnauthorizedError("Unauthorized");
   }
 
   const user = await AuthUserRepo.findById(userId);
   if (!user) {
-    return res.status(StatusCodes.NOT_FOUND).json({ msg: "User not found" });
+    throw new NotFoundError(`No User with id: ${userId}`);
   }
 
   const vehicles = await UserRepo.getUserVehicles(userId);
@@ -57,18 +62,20 @@ const getUserVehicles = async (req: any, res: Response) => {
  * @param {Request} req - Express request object containing the vehicle details and IDs in params and body.
  * @param {Response} res - Express response object used to send the response back to the client.
  */
-const editVehicle = async (req: Request, res: Response) => {
+const editVehicle = async (req: any, res: Response) => {
   const userId = parseInt(req.params.userId);
   const vehicleId = parseInt(req.params.vehicleId);
   const { name, stateNumber, type } = req.body;
+
+  if (parseInt(req.userId) !== userId) {
+    throw new UnauthorizedError("Unauthorized");
+  }
 
   validateVehicleInput(name, stateNumber, type);
 
   const vehicle = await findVehicle(vehicleId, userId);
   if (!vehicle) {
-    return res
-      .status(StatusCodes.NOT_FOUND)
-      .json({ msg: "Vehicle not found or Unauthorized action" });
+    throw new NotFoundError(`No Vehicle with id: ${vehicleId}`);
   }
 
   const updatedVehicle = await UserRepo.editVehicle(
@@ -87,15 +94,17 @@ const editVehicle = async (req: Request, res: Response) => {
  * @param {Request} req - Express request object containing the user ID and vehicle ID in params.
  * @param {Response} res - Express response object used to send the response back to the client.
  */
-const deleteVehicle = async (req: Request, res: Response) => {
+const deleteVehicle = async (req: any, res: Response) => {
   const userId = parseInt(req.params.userId);
   const vehicleId = parseInt(req.params.vehicleId);
 
+  if (parseInt(req.userId) !== userId) {
+    throw new UnauthorizedError("Unauthorized");
+  }
+
   const vehicle = await findVehicle(vehicleId, userId);
   if (!vehicle) {
-    return res
-      .status(StatusCodes.NOT_FOUND)
-      .json({ msg: "Vehicle not found or Unauthorized action" });
+    throw new NotFoundError(`No Vehicle with id: ${vehicleId}`);
   }
 
   await UserRepo.deleteVehicle(vehicleId);
@@ -109,23 +118,27 @@ const deleteVehicle = async (req: Request, res: Response) => {
  * @param {Request} req - Express request object containing reservation details like parkingZoneId, vehicleId, and hours.
  * @param {Response} res - Express response object used to send the response back to the client.
  */
-const reserveParkingZone = async (req: Request, res: Response) => {
+const reserveParkingZone = async (req: CustomRequest, res: Response) => {
   const userId = parseInt(req.params.userId);
   const { parkingZoneId, vehicleId, hours } = req.body;
 
-  const parkingZone = await AdminRepo.findParkingZoneById(parkingZoneId);
-  if (!parkingZone) {
-    return res
-      .status(StatusCodes.NOT_FOUND)
-      .json({ msg: "Parking Zone not found" });
+  if (parseInt(req.userId) !== userId) {
+    throw new UnauthorizedError("Unauthorized");
   }
 
+  const parkingZone = await AdminRepo.findParkingZoneById(parkingZoneId);
+  if (!parkingZone) {
+    throw new NotFoundError(`No Parking zone  with id: ${parkingZoneId}`);
+  }
+
+  const reservations = await UserRepo.findReservationsByUserId(userId);
+  if (!reservations.length) {
+    throw new NotFoundError("No reservations found for this user");
+  }
   const userBalance = 100;
   const cost = parkingZone.hourlyCost * hours;
   if (userBalance < cost) {
-    return res
-      .status(StatusCodes.BAD_REQUEST)
-      .json({ msg: "Insufficient balance" });
+    throw new BadRequestError("Insufficient balance");
   }
 
   const endTime = new Date();
@@ -155,21 +168,19 @@ const reserveParkingZone = async (req: Request, res: Response) => {
  * @param {CustomRequest} req - Express request object with user ID.
  * @param {Response} res - Express response object.
  */
-const userReservations = async (req: CustomRequest, res: Response) => {
+const userReservations = async (req: any, res: Response) => {
   const userId = parseInt(req.params.userId);
   const currentUserId = req.userId;
+  console.log("userId from params:", userId);
+  console.log("currentUserId from req:", currentUserId);
 
-  if (userId !== currentUserId) {
-    return res
-      .status(StatusCodes.FORBIDDEN)
-      .json({ msg: "Unauthorized action" });
+  if (parseInt(req.userId) !== userId) {
+    throw new UnauthorizedError("Unauthorized");
   }
 
   const reservations = await UserRepo.findReservationsByUserId(userId);
   if (!reservations.length) {
-    return res
-      .status(StatusCodes.NOT_FOUND)
-      .json({ msg: "No reservations found for this user" });
+    throw new NotFoundError("No reservations found for this user");
   }
 
   res.status(StatusCodes.OK).json(reservations);
@@ -186,15 +197,13 @@ const getReservation = async (req: CustomRequest, res: Response) => {
   const reservationId = parseInt(req.params.reservationId);
   const currentUserId = req.userId;
 
-  if (!currentUserId) {
-    return res.status(StatusCodes.UNAUTHORIZED).json({ msg: "Unauthorized" });
-  }
-
   const reservation = await UserRepo.findReservationById(reservationId);
   if (!reservation || reservation.userId !== currentUserId) {
-    return res
-      .status(StatusCodes.NOT_FOUND)
-      .json({ msg: "Reservation not found or Unauthorized action" });
+    throw new NotFoundError("No reservations found for this user");
+  }
+
+  if (currentUserId !== reservationId) {
+    throw new UnauthorizedError("Unauthorized");
   }
 
   res.status(StatusCodes.OK).json(reservation);
@@ -208,21 +217,20 @@ const getReservation = async (req: CustomRequest, res: Response) => {
  * @param {Response} res - Express response object used to send the response back to the client.
  */
 const deleteReservation = async (req: CustomRequest, res: Response) => {
-  const reservationId = req.params.reservationId;
+  const reservationId = parseInt(req.params.reservationId);
   const currentUserId = req.userId;
 
-  if (!currentUserId) {
-    return res.status(StatusCodes.UNAUTHORIZED).json({ msg: "Unauthorized" });
+  if (currentUserId !== reservationId) {
+    throw new UnauthorizedError("Unauthorized");
   }
 
   const reservation = await UserRepo.findReservationById(reservationId);
   if (!reservation || reservation.userId !== currentUserId) {
-    return res
-      .status(StatusCodes.NOT_FOUND)
-      .json({ msg: "Reservation not found or Unauthorized action" });
+    throw new NotFoundError("No reservations found for this user");
   }
 
   await UserRepo.deleteReservation(reservationId);
+
   res.status(StatusCodes.OK).json({ msg: "Reservation deleted" });
 };
 

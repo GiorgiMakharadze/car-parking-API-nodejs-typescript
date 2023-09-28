@@ -1,12 +1,9 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.csrfErrorHandler = exports.notFoundMiddleware = exports.errorHandlerMiddleware = void 0;
-const error_handler_1 = __importDefault(require("./error-handler"));
-exports.errorHandlerMiddleware = error_handler_1.default;
-const not_found_1 = __importDefault(require("./not-found"));
-exports.notFoundMiddleware = not_found_1.default;
-const csrfErrorHandler_1 = __importDefault(require("./csrfErrorHandler"));
-exports.csrfErrorHandler = csrfErrorHandler_1.default;
+const errorHandler_1 = require("./errorHandler");
+Object.defineProperty(exports, "errorHandlerMiddleware", { enumerable: true, get: function () { return errorHandler_1.errorHandlerMiddleware; } });
+const notFound_1 = require("./notFound");
+Object.defineProperty(exports, "notFoundMiddleware", { enumerable: true, get: function () { return notFound_1.notFoundMiddleware; } });
+const csrfErrorHandler_1 = require("./csrfErrorHandler");
+Object.defineProperty(exports, "csrfErrorHandler", { enumerable: true, get: function () { return csrfErrorHandler_1.csrfErrorHandler; } });

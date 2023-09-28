@@ -27,6 +27,7 @@
     "paseto": "^3.1.4",
     "pg": "^8.11.3",
     "pg-format": "^1.0.4",
+    "sequelize": "^6.33.0",
     "supertest": "^6.3.3",
     "ts-node": "^10.9.1",
     "validator": "^13.11.0",

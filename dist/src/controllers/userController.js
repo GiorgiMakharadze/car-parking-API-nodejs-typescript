@@ -9,6 +9,7 @@ const userRepo_1 = __importDefault(require("../repos/userRepo"));
 const userAuthRepo_1 = __importDefault(require("../repos/userAuthRepo"));
 const adminRepo_1 = __importDefault(require("../repos/adminRepo"));
 const utils_1 = require("../utils");
+const errors_1 = require("../errors");
 /**
  * @function addVehicle
  * @description This function is responsible for adding a new vehicle for a user.
@@ -19,6 +20,9 @@ const utils_1 = require("../utils");
 const addVehicle = async (req, res) => {
     const userId = parseInt(req.params.userId);
     const { name, stateNumber, type } = req.body;
+    if (parseInt(req.userId) !== userId) {
+        throw new errors_1.UnauthorizedError("Unauthorized");
+    }
     (0, utils_1.validateVehicleInput)(name, stateNumber, type);
     const newVehicle = await userRepo_1.default.addVehicle(userId, name, stateNumber, type);
     res.status(http_status_codes_1.StatusCodes.CREATED).json(newVehicle);
@@ -34,11 +38,11 @@ exports.addVehicle = addVehicle;
 const getUserVehicles = async (req, res) => {
     const userId = parseInt(req.params.userId);
     if (parseInt(req.userId) !== userId) {
-        return res.status(http_status_codes_1.StatusCodes.FORBIDDEN).json({ msg: "Unauthorized" });
+        throw new errors_1.UnauthorizedError("Unauthorized");
     }
     const user = await userAuthRepo_1.default.findById(userId);
     if (!user) {
-        return res.status(http_status_codes_1.StatusCodes.NOT_FOUND).json({ msg: "User not found" });
+        throw new errors_1.NotFoundError(`No User with id: ${userId}`);
     }
     const vehicles = await userRepo_1.default.getUserVehicles(userId);
     res.status(http_status_codes_1.StatusCodes.OK).json(vehicles);
@@ -55,12 +59,13 @@ const editVehicle = async (req, res) => {
     const userId = parseInt(req.params.userId);
     const vehicleId = parseInt(req.params.vehicleId);
     const { name, stateNumber, type } = req.body;
+    if (parseInt(req.userId) !== userId) {
+        throw new errors_1.UnauthorizedError("Unauthorized");
+    }
     (0, utils_1.validateVehicleInput)(name, stateNumber, type);
     const vehicle = await (0, utils_1.findVehicle)(vehicleId, userId);
     if (!vehicle) {
-        return res
-            .status(http_status_codes_1.StatusCodes.NOT_FOUND)
-            .json({ msg: "Vehicle not found or Unauthorized action" });
+        throw new errors_1.NotFoundError(`No Vehicle with id: ${vehicleId}`);
     }
     const updatedVehicle = await userRepo_1.default.editVehicle(vehicleId, name, stateNumber, type);
     res.status(http_status_codes_1.StatusCodes.OK).json(updatedVehicle);
@@ -76,11 +81,12 @@ exports.editVehicle = editVehicle;
 const deleteVehicle = async (req, res) => {
     const userId = parseInt(req.params.userId);
     const vehicleId = parseInt(req.params.vehicleId);
+    if (parseInt(req.userId) !== userId) {
+        throw new errors_1.UnauthorizedError("Unauthorized");
+    }
     const vehicle = await (0, utils_1.findVehicle)(vehicleId, userId);
     if (!vehicle) {
-        return res
-            .status(http_status_codes_1.StatusCodes.NOT_FOUND)
-            .json({ msg: "Vehicle not found or Unauthorized action" });
+        throw new errors_1.NotFoundError(`No Vehicle with id: ${vehicleId}`);
     }
     await userRepo_1.default.deleteVehicle(vehicleId);
     res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "Vehicle deleted" });
@@ -96,18 +102,21 @@ exports.deleteVehicle = deleteVehicle;
 const reserveParkingZone = async (req, res) => {
     const userId = parseInt(req.params.userId);
     const { parkingZoneId, vehicleId, hours } = req.body;
+    if (parseInt(req.userId) !== userId) {
+        throw new errors_1.UnauthorizedError("Unauthorized");
+    }
     const parkingZone = await adminRepo_1.default.findParkingZoneById(parkingZoneId);
     if (!parkingZone) {
-        return res
-            .status(http_status_codes_1.StatusCodes.NOT_FOUND)
-            .json({ msg: "Parking Zone not found" });
+        throw new errors_1.NotFoundError(`No Parking zone  with id: ${parkingZoneId}`);
+    }
+    const reservations = await userRepo_1.default.findReservationsByUserId(userId);
+    if (!reservations.length) {
+        throw new errors_1.NotFoundError("No reservations found for this user");
     }
     const userBalance = 100;
     const cost = parkingZone.hourlyCost * hours;
     if (userBalance < cost) {
-        return res
-            .status(http_status_codes_1.StatusCodes.BAD_REQUEST)
-            .json({ msg: "Insufficient balance" });
+        throw new errors_1.BadRequestError("Insufficient balance");
     }
     const endTime = new Date();
     endTime.setHours(endTime.getHours() + hours - 4);
@@ -130,16 +139,14 @@ exports.reserveParkingZone = reserveParkingZone;
 const userReservations = async (req, res) => {
     const userId = parseInt(req.params.userId);
     const currentUserId = req.userId;
-    if (userId !== currentUserId) {
-        return res
-            .status(http_status_codes_1.StatusCodes.FORBIDDEN)
-            .json({ msg: "Unauthorized action" });
+    console.log("userId from params:", userId);
+    console.log("currentUserId from req:", currentUserId);
+    if (parseInt(req.userId) !== userId) {
+        throw new errors_1.UnauthorizedError("Unauthorized");
     }
     const reservations = await userRepo_1.default.findReservationsByUserId(userId);
     if (!reservations.length) {
-        return res
-            .status(http_status_codes_1.StatusCodes.NOT_FOUND)
-            .json({ msg: "No reservations found for this user" });
+        throw new errors_1.NotFoundError("No reservations found for this user");
     }
     res.status(http_status_codes_1.StatusCodes.OK).json(reservations);
 };
@@ -154,14 +161,17 @@ exports.userReservations = userReservations;
 const getReservation = async (req, res) => {
     const reservationId = parseInt(req.params.reservationId);
     const currentUserId = req.userId;
-    if (!currentUserId) {
-        return res.status(http_status_codes_1.StatusCodes.UNAUTHORIZED).json({ msg: "Unauthorized" });
+    if (currentUserId !== reservationId) {
+        throw new errors_1.UnauthorizedError("Unauthorized");
     }
     const reservation = await userRepo_1.default.findReservationById(reservationId);
+    // if (!reservation || reservation.userId !== currentUserId) {
+    //   return res
+    //     .status(StatusCodes.NOT_FOUND)
+    //     .json({ msg: "Reservation not found or Unauthorized action" });
+    // }
     if (!reservation || reservation.userId !== currentUserId) {
-        return res
-            .status(http_status_codes_1.StatusCodes.NOT_FOUND)
-            .json({ msg: "Reservation not found or Unauthorized action" });
+        throw new errors_1.NotFoundError("No reservations found for this user");
     }
     res.status(http_status_codes_1.StatusCodes.OK).json(reservation);
 };
@@ -176,14 +186,17 @@ exports.getReservation = getReservation;
 const deleteReservation = async (req, res) => {
     const reservationId = parseInt(req.params.reservationId);
     const currentUserId = req.userId;
-    if (!currentUserId) {
-        return res.status(http_status_codes_1.StatusCodes.UNAUTHORIZED).json({ msg: "Unauthorized" });
+    if (currentUserId !== reservationId) {
+        throw new errors_1.UnauthorizedError("Unauthorized");
     }
     const reservation = await userRepo_1.default.findReservationById(reservationId);
+    // if (!reservation || reservation.userId !== currentUserId) {
+    //   return res
+    //     .status(StatusCodes.NOT_FOUND)
+    //     .json({ msg: "Reservation not found or Unauthorized action" });
+    // }
     if (!reservation || reservation.userId !== currentUserId) {
-        return res
-            .status(http_status_codes_1.StatusCodes.NOT_FOUND)
-            .json({ msg: "Reservation not found or Unauthorized action" });
+        throw new errors_1.NotFoundError("No reservations found for this user");
     }
     await userRepo_1.default.deleteReservation(reservationId);
     res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "Reservation deleted" });

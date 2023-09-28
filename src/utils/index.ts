@@ -9,6 +9,8 @@ import {
   validateParkingZoneInput,
 } from "./validations/validateParkingZone";
 import { validateVehicleInput } from "./validations/validateVehicles";
+import { findVehicle, findReservation } from "./userControllerRelatedFuncs";
+import { isAdmin } from "./validations/isAdmin";
 
 export {
   adminValidation,
@@ -20,4 +22,7 @@ export {
   validateParkingZoneExistence,
   validateParkingZoneInput,
   validateVehicleInput,
+  findVehicle,
+  findReservation,
+  isAdmin,
 };

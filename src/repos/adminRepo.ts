@@ -1,15 +1,17 @@
 import { toCamelCase } from "../utils";
 import pool from "../pool";
 import { QueryResultRow } from "pg";
+
 /**
  * @class AdminRepo
- * @description AdminRepo is responsible for handling database queries related to parking zones.
+ * @description AdminRepo is responsible for handling database queries related to administrative tasks such as
+ * managing parking zones, users, and parking histories.
  * @ImportantNote "as any" is used in methods due to a TypeScript error.
  * The pg library accepts numbers for query parameters, but TypeScript expects strings.
  * This type assertion is necessary to align the data types with the library's expectations.
  */
-
 class AdminRepo {
+  // Parking Zone Methods
   /**
    * @method createParkingZone
    * @description Creates a new parking zone.
@@ -98,7 +100,6 @@ class AdminRepo {
       `UPDATE parking_zones SET name = $2, address = $3, hourly_cost = $4 WHERE id = $1 RETURNING *;`,
       [id, name, address, hourlyCost as any]
     );
-
     const { rows } = result || { rows: [] };
     return toCamelCase(rows)[0];
   }
@@ -118,6 +119,13 @@ class AdminRepo {
     return toCamelCase(rows)[0];
   }
 
+  // User Management Methods
+  /**
+   * @method deleteUser
+   * @description Deletes a user.
+   * @param userId - ID of the user to be deleted.
+   * @returns The deleted user object in camelCase format or null if the user does not exist.
+   */
   static async deleteUser(userId: number) {
     const result = await pool.query(
       `DELETE FROM users WHERE id = $1 RETURNING *;`,
@@ -130,6 +138,12 @@ class AdminRepo {
     return toCamelCase(rows)[0];
   }
 
+  /**
+   * @method grantAdminRights
+   * @description Grants admin rights to a user.
+   * @param userId - ID of the user.
+   * @returns The updated user object in camelCase format or null if the user does not exist.
+   */
   static async grantAdminRights(userId: number | string) {
     const result = await pool.query(
       `UPDATE users SET role = 'admin' WHERE id = $1 RETURNING *;`,
@@ -142,6 +156,12 @@ class AdminRepo {
     return toCamelCase(rows)[0];
   }
 
+  // Parking History Methods
+  /**
+   * @method findAllParkingHistories
+   * @description Finds all parking histories.
+   * @returns An array of all parking histories in camelCase format.
+   */
   static async findAllParkingHistories() {
     const result = await pool.query(`
       SELECT 

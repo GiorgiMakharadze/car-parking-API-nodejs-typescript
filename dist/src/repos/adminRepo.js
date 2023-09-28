@@ -7,12 +7,14 @@ const utils_1 = require("../utils");
 const pool_1 = __importDefault(require("../pool"));
 /**
  * @class AdminRepo
- * @description AdminRepo is responsible for handling database queries related to parking zones.
+ * @description AdminRepo is responsible for handling database queries related to administrative tasks such as
+ * managing parking zones, users, and parking histories.
  * @ImportantNote "as any" is used in methods due to a TypeScript error.
  * The pg library accepts numbers for query parameters, but TypeScript expects strings.
  * This type assertion is necessary to align the data types with the library's expectations.
  */
 class AdminRepo {
+    // Parking Zone Methods
     /**
      * @method createParkingZone
      * @description Creates a new parking zone.
@@ -89,6 +91,13 @@ class AdminRepo {
         const { rows } = result || { rows: [] };
         return (0, utils_1.toCamelCase)(rows)[0];
     }
+    // User Management Methods
+    /**
+     * @method deleteUser
+     * @description Deletes a user.
+     * @param userId - ID of the user to be deleted.
+     * @returns The deleted user object in camelCase format or null if the user does not exist.
+     */
     static async deleteUser(userId) {
         const result = await pool_1.default.query(`DELETE FROM users WHERE id = $1 RETURNING *;`, [userId]);
         const { rows } = result || { rows: [] };
@@ -97,6 +106,12 @@ class AdminRepo {
         }
         return (0, utils_1.toCamelCase)(rows)[0];
     }
+    /**
+     * @method grantAdminRights
+     * @description Grants admin rights to a user.
+     * @param userId - ID of the user.
+     * @returns The updated user object in camelCase format or null if the user does not exist.
+     */
     static async grantAdminRights(userId) {
         const result = await pool_1.default.query(`UPDATE users SET role = 'admin' WHERE id = $1 RETURNING *;`, [userId]);
         const { rows } = result || { rows: [] };
@@ -105,6 +120,12 @@ class AdminRepo {
         }
         return (0, utils_1.toCamelCase)(rows)[0];
     }
+    // Parking History Methods
+    /**
+     * @method findAllParkingHistories
+     * @description Finds all parking histories.
+     * @returns An array of all parking histories in camelCase format.
+     */
     static async findAllParkingHistories() {
         const result = await pool_1.default.query(`
       SELECT 

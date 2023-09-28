@@ -28,6 +28,9 @@ const utils_1 = require("../utils");
  * @param {Response} res - Express response object used to send the sanitized user details back to the client.
  */
 const getAllUsers = async (req, res) => {
+    if (!(await (0, utils_1.isAdmin)(req.userId, res))) {
+        return;
+    }
     const users = await userAuthRepo_1.default.findAllUsers();
     const sanitizedUsers = users.map((user) => {
         const { password, refreshToken, checksum, securityQuestion, securityAnswer } = user, sanitizedUser = __rest(user, ["password", "refreshToken", "checksum", "securityQuestion", "securityAnswer"]);
@@ -45,6 +48,9 @@ exports.getAllUsers = getAllUsers;
  * @param {Response} res - Express response object used to send the sanitized user details back to the client.
  */
 const getUserById = async (req, res) => {
+    if (!(await (0, utils_1.isAdmin)(req.userId, res))) {
+        return;
+    }
     const userId = req.params.id;
     const user = await userAuthRepo_1.default.findById(userId);
     if (!user) {
@@ -55,6 +61,9 @@ const getUserById = async (req, res) => {
 };
 exports.getUserById = getUserById;
 const deleteUser = async (req, res) => {
+    if (!(await (0, utils_1.isAdmin)(req.userId, res))) {
+        return;
+    }
     const userId = parseInt(req.params.id);
     const deletedUser = await adminRepo_1.default.deleteUser(userId);
     if (!deletedUser) {
@@ -64,12 +73,10 @@ const deleteUser = async (req, res) => {
 };
 exports.deleteUser = deleteUser;
 const makeUserAdmin = async (req, res) => {
-    const { id } = req.params;
-    const userId = id;
-    const authenticatedUser = await userAuthRepo_1.default.findById(req.userId);
-    if (!authenticatedUser || authenticatedUser.role !== "admin") {
-        return res.status(http_status_codes_1.StatusCodes.FORBIDDEN).json({ msg: "Permission denied" });
+    if (!(await (0, utils_1.isAdmin)(req.userId, res))) {
+        return;
     }
+    const userId = req.params.id;
     const user = await userAuthRepo_1.default.findById(userId);
     if (!user) {
         return res.status(http_status_codes_1.StatusCodes.NOT_FOUND).json({ msg: "User not found" });
@@ -90,6 +97,9 @@ exports.makeUserAdmin = makeUserAdmin;
  * @param {Response} res - Express response object used to send the response back to the client.
  */
 const createParkingZone = async (req, res) => {
+    if (!(await (0, utils_1.isAdmin)(req.userId, res))) {
+        return;
+    }
     const { name, address, hourlyCost } = req.body;
     (0, utils_1.validateParkingZoneInput)(name, address, hourlyCost);
     const existingZone = await adminRepo_1.default.findParkingZoneByName(name);
@@ -109,7 +119,10 @@ exports.createParkingZone = createParkingZone;
  * @param {Request} req - Express request object.
  * @param {Response} res - Express response object used to send the parking zones details back to the client.
  */
-const getAllParkingZones = async (_req, res) => {
+const getAllParkingZones = async (req, res) => {
+    if (!(await (0, utils_1.isAdmin)(req.userId, res))) {
+        return;
+    }
     const parkingZones = await adminRepo_1.default.findAllParkingZones();
     res.status(http_status_codes_1.StatusCodes.OK).json(parkingZones);
 };
@@ -123,6 +136,9 @@ exports.getAllParkingZones = getAllParkingZones;
  * @param {Response} res - Express response object used to send the parking zone details back to the client.
  */
 const getParkingZoneById = async (req, res) => {
+    if (!(await (0, utils_1.isAdmin)(req.userId, res))) {
+        return;
+    }
     const zoneId = parseInt(req.params.id);
     await (0, utils_1.validateParkingZoneExistence)(zoneId);
     const parkingZone = await adminRepo_1.default.findParkingZoneById(zoneId);
@@ -138,6 +154,9 @@ exports.getParkingZoneById = getParkingZoneById;
  * @param {Response} res - Express response object used to send the updated parking zone details back to the client.
  */
 const updateParkingZone = async (req, res) => {
+    if (!(await (0, utils_1.isAdmin)(req.userId, res))) {
+        return;
+    }
     const zoneId = parseInt(req.params.id);
     const { name, address, hourlyCost } = req.body;
     (0, utils_1.validateParkingZoneInput)(name, address, hourlyCost);
@@ -157,15 +176,21 @@ exports.updateParkingZone = updateParkingZone;
  * @param {Response} res - Express response object used to send a confirmation of deletion back to the client.
  */
 const deleteParkingZone = async (req, res) => {
+    if (!(await (0, utils_1.isAdmin)(req.userId, res))) {
+        return;
+    }
     const zoneId = parseInt(req.params.id);
     await (0, utils_1.validateParkingZoneExistence)(zoneId);
     await adminRepo_1.default.deleteParkingZone(zoneId);
     res
         .status(http_status_codes_1.StatusCodes.OK)
-        .json({ msg: `Parking zone wit id ${zoneId} is deleted` });
+        .json({ msg: `Parking zone with id ${zoneId} is deleted` });
 };
 exports.deleteParkingZone = deleteParkingZone;
-const viewParkingHistory = async (_req, res) => {
+const viewParkingHistory = async (req, res) => {
+    if (!(await (0, utils_1.isAdmin)(req.userId, res))) {
+        return;
+    }
     const parkingHistories = await adminRepo_1.default.findAllParkingHistories();
     res.status(http_status_codes_1.StatusCodes.OK).json(parkingHistories);
 };

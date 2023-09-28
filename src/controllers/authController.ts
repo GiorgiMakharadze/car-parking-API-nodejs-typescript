@@ -31,8 +31,22 @@ const register = async (req: Request, res: Response) => {
   const { username, email, password, securityQuestion, securityAnswer } =
     req.body;
 
-  if (!username || !validator.isEmail(email) || !password) {
-    return res.status(StatusCodes.BAD_REQUEST).json({ msg: "Invalid input" });
+  if (!username) {
+    return res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ msg: "Username is required" });
+  }
+
+  if (!email || !validator.isEmail(email)) {
+    return res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ msg: "Valid email is required" });
+  }
+
+  if (!password) {
+    return res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ msg: "Password is required" });
   }
 
   if (!passwordStrength(password)) {
@@ -86,15 +100,27 @@ const register = async (req: Request, res: Response) => {
 const logIn = async (req: Request, res: Response) => {
   const { email, password } = req.body;
 
-  if (!validator.isEmail(email) || !password) {
-    return res.status(StatusCodes.BAD_REQUEST).json({ msg: "Invalid input" });
+  if (!email) {
+    return res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ msg: "Email is required" });
+  }
+
+  if (!validator.isEmail(email)) {
+    return res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ msg: "Invalid email format" });
+  }
+
+  if (!password) {
+    return res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ msg: "Password is required" });
   }
 
   const user = await AuthUserRepo.findByEmail(email);
   if (!user) {
-    return res
-      .status(StatusCodes.UNAUTHORIZED)
-      .json({ msg: "Invalid credentials" });
+    return res.status(StatusCodes.UNAUTHORIZED).json({ msg: "User not found" });
   }
 
   if (user.failedLoginAttempts >= MAX_LOGIN_ATTEMPTS) {
@@ -143,8 +169,22 @@ const logIn = async (req: Request, res: Response) => {
 const resetPassword = async (req: Request, res: Response) => {
   const { email, securityAnswer, newPassword } = req.body;
 
-  if (!email || !securityAnswer || !newPassword) {
-    return res.status(StatusCodes.BAD_REQUEST).json({ msg: "Invalid input" });
+  if (!email) {
+    return res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ msg: "Email is required" });
+  }
+
+  if (!securityAnswer) {
+    return res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ msg: "Security answer is required" });
+  }
+
+  if (!newPassword) {
+    return res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ msg: "New password is required" });
   }
 
   if (!passwordStrength(newPassword)) {

@@ -16,7 +16,7 @@ router
     .patch(utils_1.authenticateToken, utils_1.userValidation, userController_1.editVehicle)
     .delete(utils_1.authenticateToken, utils_1.userValidation, userController_1.deleteVehicle);
 router
-    .route("/:userId/reserve")
+    .route("/:userId/reservations")
     .get(utils_1.authenticateToken, utils_1.userValidation, userController_1.userReservations)
     .post(utils_1.authenticateToken, utils_1.userValidation, userController_1.reserveParkingZone);
 router

@@ -1,23 +1,23 @@
 import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import UserRepo from "../repos/userRepo";
-import { validateVehicleInput, validateParkingZoneExistence } from "../utils";
 import AuthUserRepo from "../repos/userAuthRepo";
 import AdminRepo from "../repos/adminRepo";
+import { validateVehicleInput, findVehicle, findReservation } from "../utils";
 import { CustomRequest } from "../types/RequestTypes";
 
 /**
  * @function addVehicle
- * @description Add a new vehicle to the user's account.
- * @param {Request} req - Express request object with user ID and vehicle details.
- * @param {Response} res - Express response object.
+ * @description This function is responsible for adding a new vehicle for a user.
+ * It validates the input and then adds the vehicle to the user's record in the database.
+ * @param {Request} req - Express request object containing vehicle details like name, stateNumber, and type.
+ * @param {Response} res - Express response object used to send the response back to the client.
  */
 const addVehicle = async (req: Request, res: Response) => {
   const userId = parseInt(req.params.userId);
   const { name, stateNumber, type } = req.body;
 
   validateVehicleInput(name, stateNumber, type);
-
   const newVehicle = await UserRepo.addVehicle(
     userId as any,
     name,
@@ -28,68 +28,11 @@ const addVehicle = async (req: Request, res: Response) => {
 };
 
 /**
- * @function editVehicle
- * @description Edit details of an existing vehicle associated with a user.
- * @param {Request} req - Express request object with user ID, vehicle ID, and new vehicle details.
- * @param {Response} res - Express response object.
- */
-const editVehicle = async (req: Request, res: Response) => {
-  const userId = parseInt(req.params.userId);
-  const vehicleId = parseInt(req.params.vehicleId);
-  const { name, stateNumber, type } = req.body;
-
-  validateVehicleInput(name, stateNumber, type);
-
-  const vehicle = await UserRepo.findVehicleById(vehicleId);
-  if (!vehicle) {
-    return res.status(StatusCodes.NOT_FOUND).json({ msg: "Vehicle not found" });
-  }
-
-  if (parseInt(vehicle.userId) !== userId) {
-    return res
-      .status(StatusCodes.FORBIDDEN)
-      .json({ msg: "Unauthorized action" });
-  }
-
-  const updatedVehicle = await UserRepo.editVehicle(
-    vehicleId,
-    name,
-    stateNumber,
-    type
-  );
-  res.status(StatusCodes.OK).json(updatedVehicle);
-};
-
-/**
- * @function deleteVehicle
- * @description Delete an existing vehicle associated with a user.
- * @param {Request} req - Express request object with user ID and vehicle ID.
- * @param {Response} res - Express response object.
- */
-const deleteVehicle = async (req: Request, res: Response) => {
-  const userId = parseInt(req.params.userId);
-  const vehicleId = parseInt(req.params.vehicleId);
-
-  const vehicle = await UserRepo.findVehicleById(vehicleId);
-  if (!vehicle) {
-    return res.status(StatusCodes.NOT_FOUND).json({ msg: "Vehicle not found" });
-  }
-
-  if (parseInt(vehicle.userId) !== userId) {
-    return res
-      .status(StatusCodes.FORBIDDEN)
-      .json({ msg: "Unauthorized action" });
-  }
-
-  await UserRepo.deleteVehicle(vehicleId);
-  res.status(StatusCodes.OK).json({ msg: "Vehicle deleted" });
-};
-
-/**
  * @function getUserVehicles
- * @description Retrieve all vehicles associated with a user.
- * @param {CustomRequest} req - Express request object with user ID.
- * @param {Response} res - Express response object.
+ * @description This function is responsible for retrieving all vehicles associated with a user.
+ * It checks if the user is authorized and exists, then fetches the user's vehicles from the database.
+ * @param {Request} req - Express request object containing the user ID in params.
+ * @param {Response} res - Express response object used to send the response back to the client.
  */
 const getUserVehicles = async (req: any, res: Response) => {
   const userId = parseInt(req.params.userId);
@@ -108,10 +51,63 @@ const getUserVehicles = async (req: any, res: Response) => {
 };
 
 /**
+ * @function editVehicle
+ * @description This function is responsible for editing the details of a user's vehicle.
+ * It validates the input, checks if the vehicle exists and belongs to the user, and then updates the vehicle in the database.
+ * @param {Request} req - Express request object containing the vehicle details and IDs in params and body.
+ * @param {Response} res - Express response object used to send the response back to the client.
+ */
+const editVehicle = async (req: Request, res: Response) => {
+  const userId = parseInt(req.params.userId);
+  const vehicleId = parseInt(req.params.vehicleId);
+  const { name, stateNumber, type } = req.body;
+
+  validateVehicleInput(name, stateNumber, type);
+
+  const vehicle = await findVehicle(vehicleId, userId);
+  if (!vehicle) {
+    return res
+      .status(StatusCodes.NOT_FOUND)
+      .json({ msg: "Vehicle not found or Unauthorized action" });
+  }
+
+  const updatedVehicle = await UserRepo.editVehicle(
+    vehicleId,
+    name,
+    stateNumber,
+    type
+  );
+  res.status(StatusCodes.OK).json(updatedVehicle);
+};
+
+/**
+ * @function deleteVehicle
+ * @description This function is responsible for deleting a user's vehicle.
+ * It checks if the vehicle exists and belongs to the user, and then deletes the vehicle from the database.
+ * @param {Request} req - Express request object containing the user ID and vehicle ID in params.
+ * @param {Response} res - Express response object used to send the response back to the client.
+ */
+const deleteVehicle = async (req: Request, res: Response) => {
+  const userId = parseInt(req.params.userId);
+  const vehicleId = parseInt(req.params.vehicleId);
+
+  const vehicle = await findVehicle(vehicleId, userId);
+  if (!vehicle) {
+    return res
+      .status(StatusCodes.NOT_FOUND)
+      .json({ msg: "Vehicle not found or Unauthorized action" });
+  }
+
+  await UserRepo.deleteVehicle(vehicleId);
+  res.status(StatusCodes.OK).json({ msg: "Vehicle deleted" });
+};
+
+/**
  * @function reserveParkingZone
- * @description Reserve a parking zone for a user and update their balance.
- * @param {Request} req - Express request object with user ID, parking zone details, and reservation duration.
- * @param {Response} res - Express response object.
+ * @description This function is responsible for reserving a parking zone for a user's vehicle.
+ * It validates the input, checks the user's balance, calculates the cost, and then adds the reservation to the parking history in the database.
+ * @param {Request} req - Express request object containing reservation details like parkingZoneId, vehicleId, and hours.
+ * @param {Response} res - Express response object used to send the response back to the client.
  */
 const reserveParkingZone = async (req: Request, res: Response) => {
   const userId = parseInt(req.params.userId);
@@ -133,7 +129,7 @@ const reserveParkingZone = async (req: Request, res: Response) => {
   }
 
   const endTime = new Date();
-  endTime.setHours(endTime.getHours() + hours);
+  endTime.setHours(endTime.getHours() + hours - 4);
 
   const parkingHistory = await UserRepo.addParkingHistory(
     userId,
@@ -180,56 +176,54 @@ const userReservations = async (req: CustomRequest, res: Response) => {
 };
 
 /**
- * @function deleteReservation
- * @description Delete an existing reservation associated with a user.
- * @param {CustomRequest} req - Express request object with user ID and reservation ID.
- * @param {Response} res - Express response object.
- */
-const deleteReservation = async (req: CustomRequest, res: Response) => {
-  const reservationId = parseInt(req.params.reservationId);
-  const currentUserId = req.userId;
-
-  const reservation = await UserRepo.findReservationById(reservationId);
-  if (!reservation) {
-    return res
-      .status(StatusCodes.NOT_FOUND)
-      .json({ msg: "Reservation not found" });
-  }
-
-  if (reservation.userId !== currentUserId) {
-    return res
-      .status(StatusCodes.FORBIDDEN)
-      .json({ msg: "Unauthorized action" });
-  }
-
-  await UserRepo.deleteReservation(reservationId);
-  res.status(StatusCodes.OK).json({ msg: "Reservation deleted" });
-};
-
-/**
  * @function getReservation
- * @description Retrieve details of a specific reservation associated with a user.
- * @param {CustomRequest} req - Express request object with user ID and reservation ID.
- * @param {Response} res - Express response object.
+ * @description This function is responsible for retrieving the details of a reservation.
+ * It checks if the reservation exists and belongs to the user, and then sends the reservation details back to the client.
+ * @param {CustomRequest} req - Express request object containing the reservation ID in params.
+ * @param {Response} res - Express response object used to send the response back to the client.
  */
 const getReservation = async (req: CustomRequest, res: Response) => {
   const reservationId = parseInt(req.params.reservationId);
   const currentUserId = req.userId;
 
-  const reservation = await UserRepo.findReservationById(reservationId);
-  if (!reservation) {
-    return res
-      .status(StatusCodes.NOT_FOUND)
-      .json({ msg: "Reservation not found" });
+  if (!currentUserId) {
+    return res.status(StatusCodes.UNAUTHORIZED).json({ msg: "Unauthorized" });
   }
 
-  if (reservation.userId !== currentUserId) {
+  const reservation = await UserRepo.findReservationById(reservationId);
+  if (!reservation || reservation.userId !== currentUserId) {
     return res
-      .status(StatusCodes.FORBIDDEN)
-      .json({ msg: "Unauthorized action" });
+      .status(StatusCodes.NOT_FOUND)
+      .json({ msg: "Reservation not found or Unauthorized action" });
   }
 
   res.status(StatusCodes.OK).json(reservation);
+};
+
+/**
+ * @function deleteReservation
+ * @description This function is responsible for deleting a reservation.
+ * It checks if the reservation exists and belongs to the user, and then deletes the reservation from the database.
+ * @param {CustomRequest} req - Express request object containing the reservation ID in params.
+ * @param {Response} res - Express response object used to send the response back to the client.
+ */
+const deleteReservation = async (req: CustomRequest, res: Response) => {
+  const reservationId = req.params.reservationId;
+  const currentUserId = req.userId;
+
+  if (!currentUserId) {
+    return res.status(StatusCodes.UNAUTHORIZED).json({ msg: "Unauthorized" });
+  }
+
+  const reservation = await UserRepo.findReservationById(reservationId);
+  if (!reservation || reservation.userId !== currentUserId) {
+    return res
+      .status(StatusCodes.NOT_FOUND)
+      .json({ msg: "Reservation not found or Unauthorized action" });
+  }
+
+  await UserRepo.deleteReservation(reservationId);
+  res.status(StatusCodes.OK).json({ msg: "Reservation deleted" });
 };
 
 export {

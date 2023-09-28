@@ -30,8 +30,20 @@ const MAX_LOGIN_ATTEMPTS = parseInt(process.env.MAX_LOGIN_ATTEMPTS) || 3;
  */
 const register = async (req, res) => {
     const { username, email, password, securityQuestion, securityAnswer } = req.body;
-    if (!username || !validator_1.default.isEmail(email) || !password) {
-        return res.status(http_status_codes_1.StatusCodes.BAD_REQUEST).json({ msg: "Invalid input" });
+    if (!username) {
+        return res
+            .status(http_status_codes_1.StatusCodes.BAD_REQUEST)
+            .json({ msg: "Username is required" });
+    }
+    if (!email || !validator_1.default.isEmail(email)) {
+        return res
+            .status(http_status_codes_1.StatusCodes.BAD_REQUEST)
+            .json({ msg: "Valid email is required" });
+    }
+    if (!password) {
+        return res
+            .status(http_status_codes_1.StatusCodes.BAD_REQUEST)
+            .json({ msg: "Password is required" });
     }
     if (!(0, utils_1.passwordStrength)(password)) {
         return res.status(http_status_codes_1.StatusCodes.BAD_REQUEST).json({
@@ -70,14 +82,24 @@ exports.register = register;
  */
 const logIn = async (req, res) => {
     const { email, password } = req.body;
-    if (!validator_1.default.isEmail(email) || !password) {
-        return res.status(http_status_codes_1.StatusCodes.BAD_REQUEST).json({ msg: "Invalid input" });
+    if (!email) {
+        return res
+            .status(http_status_codes_1.StatusCodes.BAD_REQUEST)
+            .json({ msg: "Email is required" });
+    }
+    if (!validator_1.default.isEmail(email)) {
+        return res
+            .status(http_status_codes_1.StatusCodes.BAD_REQUEST)
+            .json({ msg: "Invalid email format" });
+    }
+    if (!password) {
+        return res
+            .status(http_status_codes_1.StatusCodes.BAD_REQUEST)
+            .json({ msg: "Password is required" });
     }
     const user = await userAuthRepo_1.default.findByEmail(email);
     if (!user) {
-        return res
-            .status(http_status_codes_1.StatusCodes.UNAUTHORIZED)
-            .json({ msg: "Invalid credentials" });
+        return res.status(http_status_codes_1.StatusCodes.UNAUTHORIZED).json({ msg: "User not found" });
     }
     if (user.failedLoginAttempts >= MAX_LOGIN_ATTEMPTS) {
         return res
@@ -118,8 +140,20 @@ exports.logIn = logIn;
  */
 const resetPassword = async (req, res) => {
     const { email, securityAnswer, newPassword } = req.body;
-    if (!email || !securityAnswer || !newPassword) {
-        return res.status(http_status_codes_1.StatusCodes.BAD_REQUEST).json({ msg: "Invalid input" });
+    if (!email) {
+        return res
+            .status(http_status_codes_1.StatusCodes.BAD_REQUEST)
+            .json({ msg: "Email is required" });
+    }
+    if (!securityAnswer) {
+        return res
+            .status(http_status_codes_1.StatusCodes.BAD_REQUEST)
+            .json({ msg: "Security answer is required" });
+    }
+    if (!newPassword) {
+        return res
+            .status(http_status_codes_1.StatusCodes.BAD_REQUEST)
+            .json({ msg: "New password is required" });
     }
     if (!(0, utils_1.passwordStrength)(newPassword)) {
         return res.status(http_status_codes_1.StatusCodes.BAD_REQUEST).json({

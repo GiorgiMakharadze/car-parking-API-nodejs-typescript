@@ -24,7 +24,7 @@ router
   .delete(authenticateToken, userValidation, deleteVehicle);
 
 router
-  .route("/:userId/reserve")
+  .route("/:userId/reservations")
   .get(authenticateToken, userValidation, userReservations)
   .post(authenticateToken, userValidation, reserveParkingZone);
 

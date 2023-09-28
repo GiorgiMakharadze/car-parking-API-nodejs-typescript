@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.validateVehicleInput = exports.validateParkingZoneInput = exports.validateParkingZoneExistence = exports.setCookies = exports.toCamelCase = exports.passwordStrength = exports.authenticateToken = exports.userValidation = exports.adminValidation = void 0;
+exports.isAdmin = exports.findReservation = exports.findVehicle = exports.validateVehicleInput = exports.validateParkingZoneInput = exports.validateParkingZoneExistence = exports.setCookies = exports.toCamelCase = exports.passwordStrength = exports.authenticateToken = exports.userValidation = exports.adminValidation = void 0;
 const adminValidation_1 = require("./validations/adminValidation");
 Object.defineProperty(exports, "adminValidation", { enumerable: true, get: function () { return adminValidation_1.adminValidation; } });
 const userValidation_1 = require("./validations/userValidation");
@@ -18,3 +18,8 @@ Object.defineProperty(exports, "validateParkingZoneExistence", { enumerable: tru
 Object.defineProperty(exports, "validateParkingZoneInput", { enumerable: true, get: function () { return validateParkingZone_1.validateParkingZoneInput; } });
 const validateVehicles_1 = require("./validations/validateVehicles");
 Object.defineProperty(exports, "validateVehicleInput", { enumerable: true, get: function () { return validateVehicles_1.validateVehicleInput; } });
+const userControllerRelatedFuncs_1 = require("./userControllerRelatedFuncs");
+Object.defineProperty(exports, "findVehicle", { enumerable: true, get: function () { return userControllerRelatedFuncs_1.findVehicle; } });
+Object.defineProperty(exports, "findReservation", { enumerable: true, get: function () { return userControllerRelatedFuncs_1.findReservation; } });
+const isAdmin_1 = require("./validations/isAdmin");
+Object.defineProperty(exports, "isAdmin", { enumerable: true, get: function () { return isAdmin_1.isAdmin; } });

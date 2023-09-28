@@ -1,6 +1,5 @@
 import { toCamelCase } from "../utils";
 import pool from "../pool";
-import AdminRepo from "./adminRepo";
 
 /**
  * @class UserRepo
@@ -9,8 +8,16 @@ import AdminRepo from "./adminRepo";
  * The pg library accepts numbers for query parameters, but TypeScript expects strings.
  * This type assertion is necessary to align the data types with the library's expectations.
  */
-
 class UserRepo {
+  /**
+   * @method addVehicle
+   * @description This method is responsible for adding a new vehicle to the database for a user.
+   * @param {string} userId - The ID of the user.
+   * @param {string} name - The name of the vehicle.
+   * @param {string} stateNumber - The state number of the vehicle.
+   * @param {string} type - The type of the vehicle.
+   * @returns {Object} The newly added vehicle.
+   */
   static async addVehicle(
     userId: string,
     name: string,
@@ -25,6 +32,44 @@ class UserRepo {
     return toCamelCase(rows)[0];
   }
 
+  /**
+   * @method getUserVehicles
+   * @description This method retrieves all vehicles associated with a user from the database.
+   * @param {number} userId - The ID of the user.
+   * @returns {Array} An array of user vehicles.
+   */
+  static async getUserVehicles(userId: number) {
+    const result = await pool.query(
+      `SELECT * FROM vehicles WHERE user_id = $1;`,
+      [userId]
+    );
+    const { rows } = result || { rows: [] };
+    return toCamelCase(rows);
+  }
+
+  /**
+   * @method findVehicleById
+   * @description This method retrieves a vehicle by its ID from the database.
+   * @param {number} vehicleId - The ID of the vehicle.
+   * @returns {Object|null} The vehicle object if found, otherwise null.
+   */
+  static async findVehicleById(vehicleId: number) {
+    const result = await pool.query(`SELECT * FROM vehicles WHERE id = $1;`, [
+      vehicleId,
+    ]);
+    const { rows } = result || { rows: [] };
+    return rows.length ? toCamelCase(rows)[0] : null;
+  }
+
+  /**
+   * @method editVehicle
+   * @description This method is responsible for editing the details of an existing vehicle in the database.
+   * @param {number} vehicleId - The ID of the vehicle.
+   * @param {string} name - The new name of the vehicle.
+   * @param {string} stateNumber - The new state number of the vehicle.
+   * @param {string} type - The new type of the vehicle.
+   * @returns {Object} The updated vehicle.
+   */
   static async editVehicle(
     vehicleId: number,
     name: string,
@@ -39,6 +84,12 @@ class UserRepo {
     return toCamelCase(rows)[0];
   }
 
+  /**
+   * @method deleteVehicle
+   * @description This method is responsible for deleting a vehicle from the database.
+   * @param {number} vehicleId - The ID of the vehicle.
+   * @returns {Object} The deleted vehicle.
+   */
   static async deleteVehicle(vehicleId: number) {
     const result = await pool.query(
       `DELETE FROM vehicles WHERE id = $1 RETURNING *;`,
@@ -48,23 +99,16 @@ class UserRepo {
     return toCamelCase(rows)[0];
   }
 
-  static async getUserVehicles(userId: number) {
-    const result = await pool.query(
-      `SELECT * FROM vehicles WHERE user_id = $1;`,
-      [userId]
-    );
-    const { rows } = result || { rows: [] };
-    return toCamelCase(rows);
-  }
-
-  static async findVehicleById(vehicleId: number) {
-    const result = await pool.query(`SELECT * FROM vehicles WHERE id = $1;`, [
-      vehicleId,
-    ]);
-    const { rows } = result || { rows: [] };
-    return rows.length ? toCamelCase(rows)[0] : null;
-  }
-
+  /**
+   * @method addParkingHistory
+   * @description This method is responsible for adding parking history for a user in the database.
+   * @param {number} userId - The ID of the user.
+   * @param {number} vehicleId - The ID of the vehicle.
+   * @param {number} parkingZoneId - The ID of the parking zone.
+   * @param {Date} endTime - The end time of the parking.
+   * @param {number} cost - The cost of the parking.
+   * @returns {Object} The newly added parking history.
+   */
   static async addParkingHistory(
     userId: number,
     vehicleId: number,
@@ -80,15 +124,12 @@ class UserRepo {
     return toCamelCase(rows)[0];
   }
 
-  static async deleteReservation(reservationId: number) {
-    const result = await pool.query(
-      `DELETE FROM parking_history WHERE id = $1 RETURNING *;`,
-      [reservationId]
-    );
-    const { rows } = result || { rows: [] };
-    return toCamelCase(rows)[0];
-  }
-
+  /**
+   * @method findReservationsByUserId
+   * @description This method retrieves all reservations associated with a user from the database.
+   * @param {number} userId - The ID of the user.
+   * @returns {Array} An array of user reservations.
+   */
   static async findReservationsByUserId(userId: number) {
     const result = await pool.query(
       `SELECT * FROM parking_history WHERE user_id = $1;`,
@@ -98,6 +139,12 @@ class UserRepo {
     return toCamelCase(rows);
   }
 
+  /**
+   * @method findReservationById
+   * @description This method retrieves a reservation by its ID from the database.
+   * @param {number} reservationId - The ID of the reservation.
+   * @returns {Object|null} The reservation object if found, otherwise null.
+   */
   static async findReservationById(reservationId: number) {
     const result = await pool.query(
       `SELECT * FROM parking_history WHERE id = $1;`,
@@ -107,8 +154,29 @@ class UserRepo {
     return rows.length ? toCamelCase(rows)[0] : null;
   }
 
+  /**
+   * @method deleteReservation
+   * @description This method is responsible for deleting a reservation from the database.
+   * @param {number} reservationId - The ID of the reservation.
+   * @returns {Object} The deleted reservation.
+   */
+  static async deleteReservation(reservationId: number) {
+    const result = await pool.query(
+      `DELETE FROM parking_history WHERE id = $1 RETURNING *;`,
+      [reservationId]
+    );
+    const { rows } = result || { rows: [] };
+    return toCamelCase(rows)[0];
+  }
+
+  /**
+   * @method updateBalance
+   * @description This method updates the balance of a user in the database.
+   * @param {number} userId - The ID of the user.
+   * @param {number} newBalance - The new balance of the user.
+   * @returns {Object} The updated user.
+   */
   static async updateBalance(userId: number, newBalance: number) {
-    console.log("Updating to new balance:", newBalance);
     const result = await pool.query(
       `UPDATE users SET balance = $2 WHERE id = $1 RETURNING *;`,
       [userId, newBalance]

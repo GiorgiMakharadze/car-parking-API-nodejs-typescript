@@ -14,6 +14,7 @@ import {
 import authUserRouter from "./routes/userAuthRoutes";
 import adminRouter from "./routes/adminRoutes";
 import userRoutes from "./routes/userRoutes";
+import { authenticateToken, adminValidation, userValidation } from "./utils";
 
 const createApp = () => {
   const app = express();
@@ -53,8 +54,8 @@ const createApp = () => {
     res.json({ csrfToken: req.csrfToken() });
   });
   app.use("/api/v1/auth", authUserRouter);
-  app.use("/api/v1/admin", adminRouter);
-  app.use("/api/v1/users", userRoutes);
+  app.use("/api/v1/admin", authenticateToken, adminValidation, adminRouter);
+  app.use("/api/v1/users", authenticateToken, userValidation, userRoutes);
 
   app.use(notFoundMiddleware);
   app.use(errorHandlerMiddleware);

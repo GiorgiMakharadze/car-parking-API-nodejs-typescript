@@ -14,6 +14,7 @@ const middlewares_1 = require("./middlewares");
 const userAuthRoutes_1 = __importDefault(require("./routes/userAuthRoutes"));
 const adminRoutes_1 = __importDefault(require("./routes/adminRoutes"));
 const userRoutes_1 = __importDefault(require("./routes/userRoutes"));
+const utils_1 = require("./utils");
 const createApp = () => {
     const app = (0, express_1.default)();
     app.use(express_1.default.json());
@@ -42,8 +43,8 @@ const createApp = () => {
         res.json({ csrfToken: req.csrfToken() });
     });
     app.use("/api/v1/auth", userAuthRoutes_1.default);
-    app.use("/api/v1/admin", adminRoutes_1.default);
-    app.use("/api/v1/users", userRoutes_1.default);
+    app.use("/api/v1/admin", utils_1.authenticateToken, utils_1.adminValidation, adminRoutes_1.default);
+    app.use("/api/v1/users", utils_1.authenticateToken, utils_1.userValidation, userRoutes_1.default);
     app.use(middlewares_1.notFoundMiddleware);
     app.use(middlewares_1.errorHandlerMiddleware);
     return app;

@@ -12,8 +12,18 @@ const errorHandlerMiddleware = (err, req, res, next) => {
         customError.msg = err.errors.map((item) => item.message).join(",");
         customError.statusCode = 400;
     }
+    if (err instanceof sequelize_1.DatabaseError &&
+        err.message.includes("duplicate key value violates unique constraint")) {
+        const fieldName = err.message.split('"')[3];
+        customError.msg = `Duplicate value entered for ${fieldName} field, please choose another value`;
+        customError.statusCode = 400;
+    }
     if (err instanceof sequelize_1.UniqueConstraintError) {
         customError.msg = `Duplicate value entered for ${Object.keys(err.fields)} field, please choose another value`;
+        customError.statusCode = 400;
+    }
+    if (err instanceof sequelize_1.ForeignKeyConstraintError) {
+        customError.msg = `Foreign key constraint error - ${err.message}`;
         customError.statusCode = 400;
     }
     if (err instanceof sequelize_1.ForeignKeyConstraintError) {

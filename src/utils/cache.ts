@@ -48,7 +48,7 @@ export const queryWithCache = async (
   redisClient
     .hSet(cacheKey, query, JSON.stringify(rows))
     .then(() => {
-      return redisClient.expire(cacheKey, 10);
+      return redisClient.expire(cacheKey, 300);
     })
     .then(() => {
       console.log("CACHE SET TO EXPIRE IN 10 SECONDS");

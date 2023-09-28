@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const utils_1 = require("../utils");
 const pool_1 = __importDefault(require("../pool"));
+const cache_1 = require("../utils/cache");
 /**
  * @class AdminRepo
  * @description AdminRepo is responsible for handling database queries related to administrative tasks such as
@@ -123,11 +124,12 @@ class AdminRepo {
     // Parking History Methods
     /**
      * @method findAllParkingHistories
-     * @description Finds all parking histories.
+     * @description Finds all cached parking histories.
      * @returns An array of all parking histories in camelCase format.
      */
     static async findAllParkingHistories() {
-        const result = await pool_1.default.query(`
+        const cacheKey = "parkingHistories";
+        const query = `
       SELECT 
         ph.*, 
         pz.name as parking_zone_name,
@@ -139,9 +141,9 @@ class AdminRepo {
       JOIN parking_zones pz ON ph.zone_id = pz.id
       JOIN users u ON ph.user_id = u.id
       JOIN vehicles v ON ph.vehicle_id = v.id
-    `);
-        const { rows } = result || { rows: [] };
-        const histories = (0, utils_1.toCamelCase)(rows);
+    `;
+        const rows = await (0, cache_1.queryWithCache)(query, [], cacheKey);
+        const histories = (0, utils_1.toCamelCase)(rows || []);
         const currentTime = new Date();
         histories.forEach((history) => {
             history.status = history.endTime < currentTime ? "expired" : "active";

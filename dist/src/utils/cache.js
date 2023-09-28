@@ -6,9 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.clearCache = exports.queryWithCache = void 0;
 const pool_1 = __importDefault(require("../pool"));
 const redis_1 = require("redis");
-const dotenv_1 = require("dotenv");
-(0, dotenv_1.config)();
-const redisUrl = `redis://${process.env.REDIS_HOST}:6379`;
+const redisUrl = "redis://redis:6379";
 const redisClient = (0, redis_1.createClient)({
     url: redisUrl,
 });
@@ -16,9 +14,12 @@ const connectToRedis = (() => {
     async function connect() {
         try {
             await redisClient.connect();
+            console.log("Connected to Redis!");
         }
         catch (err) {
             console.error("Error connecting to Redis:", err);
+            console.log("Retrying in 5 seconds...");
+            setTimeout(connect, 5000);
         }
     }
     connect();
@@ -30,7 +31,6 @@ redisClient.on("error", (err) => {
     console.error("Error connecting to Redis:", err);
 });
 const queryWithCache = async (query, params, cacheKey) => {
-    // Check cache
     const cacheValue = await redisClient.hGet(cacheKey, query);
     if (cacheValue) {
         console.log("SERVING FROM CACHE");
@@ -42,7 +42,7 @@ const queryWithCache = async (query, params, cacheKey) => {
     redisClient
         .hSet(cacheKey, query, JSON.stringify(rows))
         .then(() => {
-        return redisClient.expire(cacheKey, 10);
+        return redisClient.expire(cacheKey, 300);
     })
         .then(() => {
         console.log("CACHE SET TO EXPIRE IN 10 SECONDS");

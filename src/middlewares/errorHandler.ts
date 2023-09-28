@@ -34,10 +34,24 @@ export const errorHandlerMiddleware = (
     customError.statusCode = 400;
   }
 
+  if (
+    err instanceof DatabaseError &&
+    err.message.includes("duplicate key value violates unique constraint")
+  ) {
+    const fieldName = err.message.split('"')[3];
+    customError.msg = `Duplicate value entered for ${fieldName} field, please choose another value`;
+    customError.statusCode = 400;
+  }
+
   if (err instanceof UniqueConstraintError) {
     customError.msg = `Duplicate value entered for ${Object.keys(
       err.fields
     )} field, please choose another value`;
+    customError.statusCode = 400;
+  }
+
+  if (err instanceof ForeignKeyConstraintError) {
+    customError.msg = `Foreign key constraint error - ${err.message}`;
     customError.statusCode = 400;
   }
 

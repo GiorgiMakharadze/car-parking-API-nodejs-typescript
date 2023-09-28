@@ -12,42 +12,34 @@ import {
   makeUserAdmin,
   viewParkingHistory,
 } from "../controllers/adminController";
-import { adminValidation, authenticateToken } from "../utils";
 
 const router = Router();
-// const apiLimiter = rateLimit({
-//   windowMs: 15 * 60 * 1000,
-//   max: 10,
-//   message:
-//     "Too many requests from this IP address,please try again after 15 minutes",
-// });
+const adminApiLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 10,
+  message: "Too many requests from this IP, please try again after 10 minutes",
+});
 
-router
-  .route("/get-all-users")
-  .get(authenticateToken, adminValidation, getAllUsers);
+router.route("/get-all-users").get(adminApiLimiter, getAllUsers);
 
 router
   .route("/get-user/:id")
-  .get(authenticateToken, adminValidation, getUserById)
-  .delete(authenticateToken, adminValidation, deleteUser);
+  .get(adminApiLimiter, getUserById)
+  .delete(adminApiLimiter, deleteUser);
 
-router
-  .route("/get-user/grant-admin/:id")
-  .patch(authenticateToken, adminValidation, makeUserAdmin);
+router.route("/get-user/grant-admin/:id").patch(adminApiLimiter, makeUserAdmin);
 
 router
   .route("/parking-zone")
-  .get(authenticateToken, adminValidation, getAllParkingZones)
-  .post(authenticateToken, adminValidation, createParkingZone);
+  .get(adminApiLimiter, getAllParkingZones)
+  .post(adminApiLimiter, createParkingZone);
 
 router
   .route("/parking-zone/:id")
-  .get(authenticateToken, adminValidation, getParkingZoneById)
-  .delete(authenticateToken, adminValidation, deleteParkingZone)
-  .patch(authenticateToken, adminValidation, updateParkingZone);
+  .get(adminApiLimiter, getParkingZoneById)
+  .delete(adminApiLimiter, deleteParkingZone)
+  .patch(adminApiLimiter, updateParkingZone);
 
-router
-  .route("/parking-history")
-  .get(authenticateToken, adminValidation, viewParkingHistory);
+router.route("/parking-history").get(adminApiLimiter, viewParkingHistory);
 
 export default router;

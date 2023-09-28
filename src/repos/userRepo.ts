@@ -12,7 +12,7 @@ import { queryWithCache, clearCache } from "../utils/cache";
 class UserRepo {
   /**
    * @method addVehicle
-   * @description This method is responsible for adding a new vehicle to the database for a user.
+   * @description This method is responsible for adding a new vehicle to the database for a user and clears cached value if user add's new vehicle.
    * @param {string} userId - The ID of the user.
    * @param {string} name - The name of the vehicle.
    * @param {string} stateNumber - The state number of the vehicle.
@@ -39,7 +39,7 @@ class UserRepo {
 
   /**
    * @method getUserVehicles
-   * @description This method retrieves all vehicles associated with a user from the database.
+   * @description This method retrieves all cached vehicles associated with a user from the database.
    * @param {number} userId - The ID of the user.
    * @returns {Array} An array of user vehicles.
    */
@@ -93,8 +93,16 @@ class UserRepo {
       `UPDATE vehicles SET name = $2, state_number = $3, type = $4 WHERE id = $1 RETURNING *;`,
       [vehicleId as any, name, stateNumber, type]
     );
+
     const { rows } = result || { rows: [] };
-    return toCamelCase(rows)[0];
+    const vehicle = toCamelCase(rows)[0];
+
+    if (vehicle) {
+      const cacheKey = `user:${vehicle.userId}:vehicles`;
+      await clearCache(cacheKey);
+    }
+
+    return vehicle;
   }
 
   /**
@@ -108,13 +116,21 @@ class UserRepo {
       `DELETE FROM vehicles WHERE id = $1 RETURNING *;`,
       [vehicleId]
     );
+
     const { rows } = result || { rows: [] };
-    return toCamelCase(rows)[0];
+    const vehicle = toCamelCase(rows)[0];
+
+    if (vehicle) {
+      const cacheKey = `user:${vehicle.userId}:vehicles`;
+      await clearCache(cacheKey);
+    }
+
+    return vehicle;
   }
 
   /**
    * @method addParkingHistory
-   * @description This method is responsible for adding parking history for a user in the database.
+   * @description This method is responsible for adding parking history for a user in the database and clean cache for findAllParkingHistories().
    * @param {number} userId - The ID of the user.
    * @param {number} vehicleId - The ID of the vehicle.
    * @param {number} parkingZoneId - The ID of the parking zone.
@@ -133,7 +149,12 @@ class UserRepo {
       `INSERT INTO parking_history (user_id, vehicle_id, zone_id, end_time, cost) VALUES ($1, $2, $3, $4, $5) RETURNING *;`,
       [userId, vehicleId, parkingZoneId, endTime, cost] as any
     );
+
     const { rows } = result || { rows: [] };
+
+    const cacheKey = "parkingHistories";
+    clearCache(cacheKey);
+
     return toCamelCase(rows)[0];
   }
 
@@ -169,7 +190,7 @@ class UserRepo {
 
   /**
    * @method deleteReservation
-   * @description This method is responsible for deleting a reservation from the database.
+   * @description This method is responsible for deleting a reservation from the database and clean cache for findAllParkingHistories().
    * @param {number} reservationId - The ID of the reservation.
    * @returns {Object} The deleted reservation.
    */
@@ -178,7 +199,12 @@ class UserRepo {
       `DELETE FROM parking_history WHERE id = $1 RETURNING *;`,
       [reservationId]
     );
+
     const { rows } = result || { rows: [] };
+
+    const cacheKey = "parkingHistories";
+    clearCache(cacheKey);
+
     return toCamelCase(rows)[0];
   }
 

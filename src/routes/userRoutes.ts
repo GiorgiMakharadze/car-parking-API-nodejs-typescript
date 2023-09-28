@@ -1,4 +1,5 @@
-import express from "express";
+import { Router } from "express";
+import rateLimit from "express-rate-limit";
 import {
   editVehicle,
   deleteVehicle,
@@ -9,28 +10,32 @@ import {
   getReservation,
   userReservations,
 } from "../controllers/userController";
-import { userValidation, authenticateToken } from "../utils";
 
-const router = express.Router();
+const router = Router();
+const userApiLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 200,
+  message: "Too many requests from this IP, please try again after an hour",
+});
 
 router
   .route("/:userId/vehicles")
-  .get(authenticateToken, userValidation, getUserVehicles)
-  .post(authenticateToken, userValidation, addVehicle);
+  .get(userApiLimiter, getUserVehicles)
+  .post(userApiLimiter, addVehicle);
 
 router
   .route("/:userId/vehicles/:vehicleId")
-  .patch(authenticateToken, userValidation, editVehicle)
-  .delete(authenticateToken, userValidation, deleteVehicle);
+  .patch(userApiLimiter, editVehicle)
+  .delete(userApiLimiter, deleteVehicle);
 
 router
   .route("/:userId/reservations")
-  .get(authenticateToken, userValidation, userReservations)
-  .post(authenticateToken, userValidation, reserveParkingZone);
+  .get(userApiLimiter, userReservations)
+  .post(userApiLimiter, reserveParkingZone);
 
 router
   .route("/:userId/reservations/:reservationId")
-  .get(authenticateToken, userValidation, getReservation)
-  .delete(authenticateToken, userValidation, deleteReservation);
+  .get(userApiLimiter, getReservation)
+  .delete(userApiLimiter, deleteReservation);
 
 export default router;

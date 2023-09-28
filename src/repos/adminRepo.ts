@@ -1,6 +1,7 @@
 import { toCamelCase } from "../utils";
 import pool from "../pool";
 import { QueryResultRow } from "pg";
+import { queryWithCache } from "../utils/cache";
 
 /**
  * @class AdminRepo
@@ -159,11 +160,12 @@ class AdminRepo {
   // Parking History Methods
   /**
    * @method findAllParkingHistories
-   * @description Finds all parking histories.
+   * @description Finds all cached parking histories.
    * @returns An array of all parking histories in camelCase format.
    */
   static async findAllParkingHistories() {
-    const result = await pool.query(`
+    const cacheKey = "parkingHistories";
+    const query = `
       SELECT 
         ph.*, 
         pz.name as parking_zone_name,
@@ -175,13 +177,16 @@ class AdminRepo {
       JOIN parking_zones pz ON ph.zone_id = pz.id
       JOIN users u ON ph.user_id = u.id
       JOIN vehicles v ON ph.vehicle_id = v.id
-    `);
-    const { rows } = result || { rows: [] };
-    const histories = toCamelCase(rows);
+    `;
+
+    const rows = await queryWithCache(query, [], cacheKey);
+    const histories = toCamelCase(rows || []);
     const currentTime = new Date();
+
     histories.forEach((history) => {
       history.status = history.endTime < currentTime ? "expired" : "active";
     });
+
     return histories;
   }
 }

@@ -17,5 +17,10 @@ router
     .delete(utils_1.authenticateToken, utils_1.userValidation, userController_1.deleteVehicle);
 router
     .route("/:userId/reserve")
+    .get(utils_1.authenticateToken, utils_1.userValidation, userController_1.userReservations)
     .post(utils_1.authenticateToken, utils_1.userValidation, userController_1.reserveParkingZone);
+router
+    .route("/:userId/reservations/:reservationId")
+    .get(utils_1.authenticateToken, utils_1.userValidation, userController_1.getReservation)
+    .delete(utils_1.authenticateToken, utils_1.userValidation, userController_1.deleteReservation);
 exports.default = router;

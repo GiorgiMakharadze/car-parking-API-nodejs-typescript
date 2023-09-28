@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.reserveParkingZone = exports.getUserVehicles = exports.deleteVehicle = exports.editVehicle = exports.addVehicle = void 0;
+exports.userReservations = exports.getReservation = exports.deleteReservation = exports.reserveParkingZone = exports.getUserVehicles = exports.deleteVehicle = exports.editVehicle = exports.addVehicle = void 0;
 const http_status_codes_1 = require("http-status-codes");
 const userRepo_1 = __importDefault(require("../repos/userRepo"));
 const utils_1 = require("../utils");
@@ -82,11 +82,65 @@ const reserveParkingZone = async (req, res) => {
     }
     const endTime = new Date();
     endTime.setHours(endTime.getHours() + hours);
-    await userRepo_1.default.addParkingHistory(userId, vehicleId, parkingZoneId, endTime, cost);
-    console.log("UserId:", userId);
-    console.log("Body:", req.body);
+    const parkingHistory = await userRepo_1.default.addParkingHistory(userId, vehicleId, parkingZoneId, endTime, cost);
     const newBalance = userBalance - cost;
     await userRepo_1.default.updateBalance(userId, newBalance);
-    res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "Reservation successful", endTime });
+    res.status(http_status_codes_1.StatusCodes.OK).json({
+        msg: "Reservation successful",
+        endTime,
+        reservationId: parkingHistory.id,
+    });
 };
 exports.reserveParkingZone = reserveParkingZone;
+const userReservations = async (req, res) => {
+    const userId = parseInt(req.params.userId);
+    const currentUserId = req.userId;
+    if (userId !== currentUserId) {
+        return res
+            .status(http_status_codes_1.StatusCodes.FORBIDDEN)
+            .json({ msg: "Unauthorized action" });
+    }
+    const reservations = await userRepo_1.default.findReservationsByUserId(userId);
+    if (!reservations.length) {
+        return res
+            .status(http_status_codes_1.StatusCodes.NOT_FOUND)
+            .json({ msg: "No reservations found for this user" });
+    }
+    res.status(http_status_codes_1.StatusCodes.OK).json(reservations);
+};
+exports.userReservations = userReservations;
+const deleteReservation = async (req, res) => {
+    const reservationId = parseInt(req.params.reservationId);
+    const currentUserId = req.userId;
+    const reservation = await userRepo_1.default.findReservationById(reservationId);
+    if (!reservation) {
+        return res
+            .status(http_status_codes_1.StatusCodes.NOT_FOUND)
+            .json({ msg: "Reservation not found" });
+    }
+    if (reservation.userId !== currentUserId) {
+        return res
+            .status(http_status_codes_1.StatusCodes.FORBIDDEN)
+            .json({ msg: "Unauthorized action" });
+    }
+    await userRepo_1.default.deleteReservation(reservationId);
+    res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "Reservation deleted" });
+};
+exports.deleteReservation = deleteReservation;
+const getReservation = async (req, res) => {
+    const reservationId = parseInt(req.params.reservationId);
+    const currentUserId = req.userId;
+    const reservation = await userRepo_1.default.findReservationById(reservationId);
+    if (!reservation) {
+        return res
+            .status(http_status_codes_1.StatusCodes.NOT_FOUND)
+            .json({ msg: "Reservation not found" });
+    }
+    if (reservation.userId !== currentUserId) {
+        return res
+            .status(http_status_codes_1.StatusCodes.FORBIDDEN)
+            .json({ msg: "Unauthorized action" });
+    }
+    res.status(http_status_codes_1.StatusCodes.OK).json(reservation);
+};
+exports.getReservation = getReservation;

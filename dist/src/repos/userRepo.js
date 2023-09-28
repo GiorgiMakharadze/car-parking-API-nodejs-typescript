@@ -50,6 +50,11 @@ class UserRepo {
         const { rows } = result || { rows: [] };
         return (0, utils_1.toCamelCase)(rows)[0];
     }
+    static async findReservationsByUserId(userId) {
+        const result = await pool_1.default.query(`SELECT * FROM parking_history WHERE user_id = $1;`, [userId]);
+        const { rows } = result || { rows: [] };
+        return (0, utils_1.toCamelCase)(rows);
+    }
     static async findReservationById(reservationId) {
         const result = await pool_1.default.query(`SELECT * FROM parking_history WHERE id = $1;`, [reservationId]);
         const { rows } = result || { rows: [] };

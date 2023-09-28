@@ -138,9 +138,6 @@ exports.reserveParkingZone = reserveParkingZone;
  */
 const userReservations = async (req, res) => {
     const userId = parseInt(req.params.userId);
-    const currentUserId = req.userId;
-    console.log("userId from params:", userId);
-    console.log("currentUserId from req:", currentUserId);
     if (parseInt(req.userId) !== userId) {
         throw new errors_1.UnauthorizedError("Unauthorized");
     }

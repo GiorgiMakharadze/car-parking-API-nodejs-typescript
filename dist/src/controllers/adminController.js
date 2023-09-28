@@ -19,6 +19,7 @@ const http_status_codes_1 = require("http-status-codes");
 const userAuthRepo_1 = __importDefault(require("../repos/userAuthRepo"));
 const adminRepo_1 = __importDefault(require("../repos/adminRepo"));
 const utils_1 = require("../utils");
+const errors_1 = require("../errors");
 /**
  * @function getAllUsers
  * @description Retrieve all users from the database and sanitize the output.
@@ -32,6 +33,9 @@ const getAllUsers = async (req, res) => {
         return;
     }
     const users = await userAuthRepo_1.default.findAllUsers();
+    if (!users) {
+        throw new errors_1.NotFoundError("Users not found");
+    }
     const sanitizedUsers = users.map((user) => {
         const { password, refreshToken, checksum, securityQuestion, securityAnswer } = user, sanitizedUser = __rest(user, ["password", "refreshToken", "checksum", "securityQuestion", "securityAnswer"]);
         return sanitizedUser;
@@ -54,7 +58,7 @@ const getUserById = async (req, res) => {
     const userId = req.params.id;
     const user = await userAuthRepo_1.default.findById(userId);
     if (!user) {
-        return res.status(http_status_codes_1.StatusCodes.NOT_FOUND).json({ msg: "User not found" });
+        throw new errors_1.NotFoundError("User not found");
     }
     const { password, refreshToken, checksum, securityQuestion, securityAnswer } = user, sanitizedUser = __rest(user, ["password", "refreshToken", "checksum", "securityQuestion", "securityAnswer"]);
     res.status(http_status_codes_1.StatusCodes.OK).json(sanitizedUser);
@@ -67,7 +71,7 @@ const deleteUser = async (req, res) => {
     const userId = parseInt(req.params.id);
     const deletedUser = await adminRepo_1.default.deleteUser(userId);
     if (!deletedUser) {
-        return res.status(http_status_codes_1.StatusCodes.NOT_FOUND).json({ msg: "User not found" });
+        throw new errors_1.NotFoundError("User not found");
     }
     res.status(http_status_codes_1.StatusCodes.OK).json({ msg: `User with id ${userId} is deleted` });
 };
@@ -79,10 +83,10 @@ const makeUserAdmin = async (req, res) => {
     const userId = req.params.id;
     const user = await userAuthRepo_1.default.findById(userId);
     if (!user) {
-        return res.status(http_status_codes_1.StatusCodes.NOT_FOUND).json({ msg: "User not found" });
+        throw new errors_1.NotFoundError("User not found");
     }
     if (user.role === "admin") {
-        return res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "User is already an admin" });
+        throw new errors_1.AlreadyExistsError("User is already admin");
     }
     await adminRepo_1.default.grantAdminRights(userId);
     return res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "User has been made admin" });
@@ -104,9 +108,7 @@ const createParkingZone = async (req, res) => {
     (0, utils_1.validateParkingZoneInput)(name, address, hourlyCost);
     const existingZone = await adminRepo_1.default.findParkingZoneByName(name);
     if (existingZone) {
-        return res
-            .status(http_status_codes_1.StatusCodes.CONFLICT)
-            .json({ msg: "Parking zone already exists" });
+        throw new errors_1.AlreadyExistsError("Parking zone already exists");
     }
     const newParkingZone = await adminRepo_1.default.createParkingZone(name, address, hourlyCost);
     res.status(http_status_codes_1.StatusCodes.CREATED).json(newParkingZone);
@@ -124,6 +126,9 @@ const getAllParkingZones = async (req, res) => {
         return;
     }
     const parkingZones = await adminRepo_1.default.findAllParkingZones();
+    if (!parkingZones) {
+        throw new errors_1.NotFoundError("No parking zone found");
+    }
     res.status(http_status_codes_1.StatusCodes.OK).json(parkingZones);
 };
 exports.getAllParkingZones = getAllParkingZones;
@@ -142,6 +147,9 @@ const getParkingZoneById = async (req, res) => {
     const zoneId = parseInt(req.params.id);
     await (0, utils_1.validateParkingZoneExistence)(zoneId);
     const parkingZone = await adminRepo_1.default.findParkingZoneById(zoneId);
+    if (!parkingZone) {
+        throw new errors_1.NotFoundError("No parking zone found");
+    }
     res.status(http_status_codes_1.StatusCodes.OK).json(parkingZone);
 };
 exports.getParkingZoneById = getParkingZoneById;
@@ -161,6 +169,10 @@ const updateParkingZone = async (req, res) => {
     const { name, address, hourlyCost } = req.body;
     (0, utils_1.validateParkingZoneInput)(name, address, hourlyCost);
     await (0, utils_1.validateParkingZoneExistence)(zoneId);
+    const parkingZone = await adminRepo_1.default.findParkingZoneById(zoneId);
+    if (!parkingZone) {
+        throw new errors_1.NotFoundError("No parking zone found");
+    }
     const updatedParkingZone = await adminRepo_1.default.updateParkingZone(zoneId, name, address, hourlyCost);
     res.status(http_status_codes_1.StatusCodes.OK).json({
         msg: `Parking zone with id ${zoneId} is updated`,
@@ -181,6 +193,10 @@ const deleteParkingZone = async (req, res) => {
     }
     const zoneId = parseInt(req.params.id);
     await (0, utils_1.validateParkingZoneExistence)(zoneId);
+    const parkingZone = await adminRepo_1.default.findParkingZoneById(zoneId);
+    if (!parkingZone) {
+        throw new errors_1.NotFoundError("No parking zone found");
+    }
     await adminRepo_1.default.deleteParkingZone(zoneId);
     res
         .status(http_status_codes_1.StatusCodes.OK)
@@ -192,6 +208,9 @@ const viewParkingHistory = async (req, res) => {
         return;
     }
     const parkingHistories = await adminRepo_1.default.findAllParkingHistories();
+    if (!parkingHistories) {
+        throw new errors_1.NotFoundError("No parking history found");
+    }
     res.status(http_status_codes_1.StatusCodes.OK).json(parkingHistories);
 };
 exports.viewParkingHistory = viewParkingHistory;

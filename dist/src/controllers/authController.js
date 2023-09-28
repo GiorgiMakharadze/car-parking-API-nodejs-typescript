@@ -13,6 +13,7 @@ const crypto_2 = __importDefault(require("crypto"));
 require("dotenv/config");
 const userAuthRepo_1 = __importDefault(require("../repos/userAuthRepo"));
 const utils_1 = require("../utils");
+const errors_1 = require("../errors");
 const { privateKey, publicKey } = (0, crypto_1.generateKeyPairSync)("ed25519");
 const privateKeyPEM = privateKey.export({
     type: "pkcs8",
@@ -31,35 +32,23 @@ const MAX_LOGIN_ATTEMPTS = parseInt(process.env.MAX_LOGIN_ATTEMPTS) || 3;
 const register = async (req, res) => {
     const { username, email, password, securityQuestion, securityAnswer } = req.body;
     if (!username) {
-        return res
-            .status(http_status_codes_1.StatusCodes.BAD_REQUEST)
-            .json({ msg: "Username is required" });
+        throw new errors_1.BadRequestError("Please provide username");
     }
     if (!email || !validator_1.default.isEmail(email)) {
-        return res
-            .status(http_status_codes_1.StatusCodes.BAD_REQUEST)
-            .json({ msg: "Valid email is required" });
+        throw new errors_1.BadRequestError("Valid email is required");
     }
     if (!password) {
-        return res
-            .status(http_status_codes_1.StatusCodes.BAD_REQUEST)
-            .json({ msg: "Password is required" });
+        throw new errors_1.BadRequestError("Please provide password");
     }
     if (!(0, utils_1.passwordStrength)(password)) {
-        return res.status(http_status_codes_1.StatusCodes.BAD_REQUEST).json({
-            msg: "Weak password. It should be at least 10 characters long, contain a number and a special character.",
-        });
+        throw new errors_1.BadRequestError("Weak password. It should be at least 10 characters long, contain a number and a special character.");
     }
     const existingUser = await userAuthRepo_1.default.findByEmail(email);
     if (existingUser) {
-        return res
-            .status(http_status_codes_1.StatusCodes.CONFLICT)
-            .json({ msg: "User already exists" });
+        throw new errors_1.AlreadyExistsError("User already exists");
     }
     if (!securityQuestion || !securityAnswer) {
-        return res
-            .status(http_status_codes_1.StatusCodes.BAD_REQUEST)
-            .json({ msg: "Security question and answer are required" });
+        throw new errors_1.BadRequestError("Security question and answer are required");
     }
     const hashedPassword = await bcrypt_1.default.hash(password, 12);
     let role = "user";
@@ -82,36 +71,23 @@ exports.register = register;
  */
 const logIn = async (req, res) => {
     const { email, password } = req.body;
-    if (!email) {
-        return res
-            .status(http_status_codes_1.StatusCodes.BAD_REQUEST)
-            .json({ msg: "Email is required" });
-    }
-    if (!validator_1.default.isEmail(email)) {
-        return res
-            .status(http_status_codes_1.StatusCodes.BAD_REQUEST)
-            .json({ msg: "Invalid email format" });
+    if (!email || !validator_1.default.isEmail(email)) {
+        throw new errors_1.BadRequestError("Valid email is required");
     }
     if (!password) {
-        return res
-            .status(http_status_codes_1.StatusCodes.BAD_REQUEST)
-            .json({ msg: "Password is required" });
+        throw new errors_1.BadRequestError("Please provide password");
     }
     const user = await userAuthRepo_1.default.findByEmail(email);
     if (!user) {
-        return res.status(http_status_codes_1.StatusCodes.UNAUTHORIZED).json({ msg: "User not found" });
+        throw new errors_1.UnauthenticatedError("User not found");
     }
     if (user.failedLoginAttempts >= MAX_LOGIN_ATTEMPTS) {
-        return res
-            .status(http_status_codes_1.StatusCodes.FORBIDDEN)
-            .json({ msg: "Your account is suspended. Please reset your password." });
+        throw new errors_1.UnauthorizedError("Your account is suspended. Please reset your password.");
     }
     const isValidPassword = await bcrypt_1.default.compare(password, user.password);
     if (!isValidPassword) {
         await userAuthRepo_1.default.incrementFailedLoginAttempts(user.id);
-        return res
-            .status(http_status_codes_1.StatusCodes.UNAUTHORIZED)
-            .json({ msg: "Invalid credentials" });
+        throw new errors_1.UnauthenticatedError("Invalid Credentials");
     }
     await userAuthRepo_1.default.resetFailedLoginAttempts(user.id);
     const checksumData = {
@@ -141,33 +117,23 @@ exports.logIn = logIn;
 const resetPassword = async (req, res) => {
     const { email, securityAnswer, newPassword } = req.body;
     if (!email) {
-        return res
-            .status(http_status_codes_1.StatusCodes.BAD_REQUEST)
-            .json({ msg: "Email is required" });
+        throw new errors_1.BadRequestError("Please provide email");
     }
     if (!securityAnswer) {
-        return res
-            .status(http_status_codes_1.StatusCodes.BAD_REQUEST)
-            .json({ msg: "Security answer is required" });
+        throw new errors_1.BadRequestError("Please provide security answer");
     }
     if (!newPassword) {
-        return res
-            .status(http_status_codes_1.StatusCodes.BAD_REQUEST)
-            .json({ msg: "New password is required" });
+        throw new errors_1.BadRequestError("Please provide new password");
     }
     if (!(0, utils_1.passwordStrength)(newPassword)) {
-        return res.status(http_status_codes_1.StatusCodes.BAD_REQUEST).json({
-            msg: "Weak password. It should be at least 10 characters long, contain a number and a special character.",
-        });
+        throw new errors_1.BadRequestError("Weak password. It should be at least 10 characters long, contain a number and a special character");
     }
     const user = await userAuthRepo_1.default.findByEmail(email);
     if (!user) {
-        return res.status(http_status_codes_1.StatusCodes.NOT_FOUND).json({ msg: "User not found" });
+        throw new errors_1.NotFoundError("User not found");
     }
     if (user.securityAnswer !== securityAnswer) {
-        return res
-            .status(http_status_codes_1.StatusCodes.UNAUTHORIZED)
-            .json({ msg: "Invalid security answer" });
+        throw new errors_1.UnauthenticatedError("Invalid Security answer");
     }
     const hashedPassword = await bcrypt_1.default.hash(newPassword, 12);
     await userAuthRepo_1.default.updatePassword(user.id, hashedPassword);
@@ -196,20 +162,14 @@ exports.resetPassword = resetPassword;
 const refreshTokenHandler = async (req, res) => {
     const { refreshToken } = req.cookies;
     if (!refreshToken) {
-        return res
-            .status(http_status_codes_1.StatusCodes.BAD_REQUEST)
-            .json({ msg: "No refresh token provided" });
+        throw new errors_1.BadRequestError("No refresh token provided");
     }
     const user = await userAuthRepo_1.default.findByRefreshToken(refreshToken);
     if (!user) {
-        return res
-            .status(http_status_codes_1.StatusCodes.UNAUTHORIZED)
-            .json({ msg: "Invalid refresh token" });
+        throw new errors_1.UnauthenticatedError("Invalid refresh token");
     }
     if (new Date() > user.refreshTokenExpiresAt) {
-        return res
-            .status(http_status_codes_1.StatusCodes.UNAUTHORIZED)
-            .json({ msg: "Refresh token has expired" });
+        throw new errors_1.UnauthenticatedError("Refresh token has expired");
     }
     await userAuthRepo_1.default.saveRefreshToken(user.id, null);
     const checksum = crypto_2.default
@@ -232,15 +192,11 @@ exports.refreshTokenHandler = refreshTokenHandler;
 const logOut = async (req, res) => {
     const { refreshToken } = req.cookies;
     if (!refreshToken) {
-        return res
-            .status(http_status_codes_1.StatusCodes.BAD_REQUEST)
-            .json({ msg: "No refresh token provided" });
+        throw new errors_1.BadRequestError("No refresh token provided");
     }
     const user = await userAuthRepo_1.default.findByRefreshToken(refreshToken);
     if (!user) {
-        return res
-            .status(http_status_codes_1.StatusCodes.UNAUTHORIZED)
-            .json({ msg: "Invalid refresh token" });
+        throw new errors_1.UnauthenticatedError("Invalid refresh token");
     }
     await userAuthRepo_1.default.invalidateRefreshToken(user.id);
     res.clearCookie("token");

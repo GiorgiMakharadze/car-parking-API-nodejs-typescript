@@ -8,6 +8,7 @@ import {
   isAdmin,
 } from "../utils";
 import { CustomRequest } from "../types/RequestTypes";
+import { AlreadyExistsError, NotFoundError } from "../errors";
 
 /**
  * @function getAllUsers
@@ -23,6 +24,9 @@ const getAllUsers = async (req: CustomRequest, res: Response) => {
   }
 
   const users = await AuthUserRepo.findAllUsers();
+  if (!users) {
+    throw new NotFoundError("Users not found");
+  }
   const sanitizedUsers = users.map((user) => {
     const {
       password,
@@ -53,7 +57,7 @@ const getUserById = async (req: CustomRequest, res: Response) => {
   const userId = req.params.id;
   const user = await AuthUserRepo.findById(userId);
   if (!user) {
-    return res.status(StatusCodes.NOT_FOUND).json({ msg: "User not found" });
+    throw new NotFoundError("User not found");
   }
 
   const {
@@ -75,7 +79,7 @@ const deleteUser = async (req: CustomRequest, res: Response) => {
   const userId = parseInt(req.params.id);
   const deletedUser = await AdminRepo.deleteUser(userId);
   if (!deletedUser) {
-    return res.status(StatusCodes.NOT_FOUND).json({ msg: "User not found" });
+    throw new NotFoundError("User not found");
   }
 
   res.status(StatusCodes.OK).json({ msg: `User with id ${userId} is deleted` });
@@ -89,11 +93,11 @@ const makeUserAdmin = async (req: CustomRequest, res: Response) => {
   const userId = req.params.id;
   const user = await AuthUserRepo.findById(userId);
   if (!user) {
-    return res.status(StatusCodes.NOT_FOUND).json({ msg: "User not found" });
+    throw new NotFoundError("User not found");
   }
 
   if (user.role === "admin") {
-    return res.status(StatusCodes.OK).json({ msg: "User is already an admin" });
+    throw new AlreadyExistsError("User is already admin");
   }
 
   await AdminRepo.grantAdminRights(userId);
@@ -118,9 +122,7 @@ const createParkingZone = async (req: CustomRequest, res: Response) => {
 
   const existingZone = await AdminRepo.findParkingZoneByName(name);
   if (existingZone) {
-    return res
-      .status(StatusCodes.CONFLICT)
-      .json({ msg: "Parking zone already exists" });
+    throw new AlreadyExistsError("Parking zone already exists");
   }
 
   const newParkingZone = await AdminRepo.createParkingZone(
@@ -144,6 +146,10 @@ const getAllParkingZones = async (req: CustomRequest, res: Response) => {
   }
 
   const parkingZones = await AdminRepo.findAllParkingZones();
+  if (!parkingZones) {
+    throw new NotFoundError("No parking zone found");
+  }
+
   res.status(StatusCodes.OK).json(parkingZones);
 };
 
@@ -164,6 +170,10 @@ const getParkingZoneById = async (req: CustomRequest, res: Response) => {
   await validateParkingZoneExistence(zoneId);
 
   const parkingZone = await AdminRepo.findParkingZoneById(zoneId);
+  if (!parkingZone) {
+    throw new NotFoundError("No parking zone found");
+  }
+
   res.status(StatusCodes.OK).json(parkingZone);
 };
 
@@ -184,6 +194,11 @@ const updateParkingZone = async (req: CustomRequest, res: Response) => {
   const { name, address, hourlyCost } = req.body;
   validateParkingZoneInput(name, address, hourlyCost);
   await validateParkingZoneExistence(zoneId);
+
+  const parkingZone = await AdminRepo.findParkingZoneById(zoneId);
+  if (!parkingZone) {
+    throw new NotFoundError("No parking zone found");
+  }
 
   const updatedParkingZone = await AdminRepo.updateParkingZone(
     zoneId,
@@ -212,6 +227,11 @@ const deleteParkingZone = async (req: CustomRequest, res: Response) => {
   const zoneId = parseInt(req.params.id);
   await validateParkingZoneExistence(zoneId);
 
+  const parkingZone = await AdminRepo.findParkingZoneById(zoneId);
+  if (!parkingZone) {
+    throw new NotFoundError("No parking zone found");
+  }
+
   await AdminRepo.deleteParkingZone(zoneId);
   res
     .status(StatusCodes.OK)
@@ -224,6 +244,10 @@ const viewParkingHistory = async (req: CustomRequest, res: Response) => {
   }
 
   const parkingHistories = await AdminRepo.findAllParkingHistories();
+  if (!parkingHistories) {
+    throw new NotFoundError("No parking history found");
+  }
+
   res.status(StatusCodes.OK).json(parkingHistories);
 };
 

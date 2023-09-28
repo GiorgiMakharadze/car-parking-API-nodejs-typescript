@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.BadRequestError = exports.UnauthorizedError = exports.UnauthenticatedError = exports.NotFoundError = void 0;
+exports.AlreadyExistsError = exports.BadRequestError = exports.UnauthorizedError = exports.UnauthenticatedError = exports.NotFoundError = void 0;
 const notFound_1 = require("./notFound");
 Object.defineProperty(exports, "NotFoundError", { enumerable: true, get: function () { return notFound_1.NotFoundError; } });
 const unauthenticated_1 = require("./unauthenticated");
@@ -9,3 +9,5 @@ const unauthorized_1 = require("./unauthorized");
 Object.defineProperty(exports, "UnauthorizedError", { enumerable: true, get: function () { return unauthorized_1.UnauthorizedError; } });
 const badRequest_1 = require("./badRequest");
 Object.defineProperty(exports, "BadRequestError", { enumerable: true, get: function () { return badRequest_1.BadRequestError; } });
+const aleradyExists_1 = require("./aleradyExists");
+Object.defineProperty(exports, "AlreadyExistsError", { enumerable: true, get: function () { return aleradyExists_1.AlreadyExistsError; } });

@@ -49,12 +49,27 @@ A robust Car Parking Management System leveraging technologies such as Node.js, 
 - Docker
   [https://docs.docker.com/engine/install/]
 
+- run Docker
+
 ### Installation Steps
 
 1. **Clone the Repository**
-   ```sh
-   git clone https://github.com/GiorgiMakharadze/car-parking-API-nodejs-typescript.git
-   ```
+
+```sh
+git clone https://github.com/GiorgiMakharadze/car-parking-API-nodejs-typescript.git
+```
+
+1. Create dotenv file
+
+```bash
+ PGUSER=root
+ PGPASSWORD=secret
+ PGUSERTEST=roottest
+ PGPASSWORDTEST=secrettest
+ MAX_LOGIN_ATTEMPTS=3
+ PRIVATE_KEY=MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDdmsx8TI5W6U9/JUVpG9RGc/By6A2Cv2Ic5UeZSdv0ph9/
+```
+
 2. run `docker compose build`
 3. run `docker compose up`
 4. Go to project folder and run `make migrationup`

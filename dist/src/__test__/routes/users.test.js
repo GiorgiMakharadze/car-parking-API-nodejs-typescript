@@ -36,4 +36,3 @@ it("create a user", async () => {
     const finishCount = await userAuthRepo_1.default.countUsers();
     expect(finishCount).toHaveBeenCalledTimes(1);
 }, 10000);
-//You can write other test here

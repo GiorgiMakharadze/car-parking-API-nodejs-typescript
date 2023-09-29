@@ -54,13 +54,10 @@ A robust Car Parking Management System leveraging technologies such as Node.js, 
 ### Installation Steps
 
 1. **Clone the Repository**
-
 ```sh
 git clone https://github.com/GiorgiMakharadze/car-parking-API-nodejs-typescript.git
 ```
-
 2. Create dotenv file
-
 ```bash
  PGUSER=root
  PGPASSWORD=secret
@@ -69,14 +66,13 @@ git clone https://github.com/GiorgiMakharadze/car-parking-API-nodejs-typescript.
  MAX_LOGIN_ATTEMPTS=3
  PRIVATE_KEY=MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDdmsx8TI5W6U9/JUVpG9RGc/By6A2Cv2Ic5UeZSdv0ph9/
 ```
-
-2. run npm install
-3. run `docker compose build`
-4. run `docker compose up`
-5. Go to project folder and run `make migrationup`
-6. You can use API
-7. The API is now ready for use! Remember, the API employs CSRF protection. First, make a GET request to /csrf-token, then include the received token in the headers of your API calls as x-csrf-token: value. This is crucial as, without the correct token, you are restricted to making only GET requests.
-8. If you wan to shut down run `docker compose down`
+2 run `docker compose build`
+3. run `docker compose up`
+4. Go to project folder and run `make migrationup`
+5. You can use API
+6. The API is now ready for use! Remember, the API employs CSRF protection. First, make a GET request to /csrf-token, then include the received token in the headers of your API calls as x-csrf-token: value. This is crucial as, without the correct token, you are restricted to making only GET requests.
+7. If you wan to shut down run `docker compose down`
+8. If an issue arises and docker-compose build does not execute successfully, it is recommended to run npm install as an initial step before attempting to run docker-compose build again. This ensures that all the necessary Node.js dependencies are installed, potentially resolving any errors related to missing packages.
 
 ## Testing
 

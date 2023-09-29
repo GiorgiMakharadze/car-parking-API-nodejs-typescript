@@ -59,7 +59,7 @@ A robust Car Parking Management System leveraging technologies such as Node.js, 
 git clone https://github.com/GiorgiMakharadze/car-parking-API-nodejs-typescript.git
 ```
 
-1. Create dotenv file
+2. Create dotenv file
 
 ```bash
  PGUSER=root
@@ -70,12 +70,13 @@ git clone https://github.com/GiorgiMakharadze/car-parking-API-nodejs-typescript.
  PRIVATE_KEY=MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDdmsx8TI5W6U9/JUVpG9RGc/By6A2Cv2Ic5UeZSdv0ph9/
 ```
 
-2. run `docker compose build`
-3. run `docker compose up`
-4. Go to project folder and run `make migrationup`
-5. You can use API
-6. The API is now ready for use! Remember, the API employs CSRF protection. First, make a GET request to /csrf-token, then include the received token in the headers of your API calls as x-csrf-token: value. This is crucial as, without the correct token, you are restricted to making only GET requests.
-7. If you wan to shut down run `docker compose down`
+2. run npm install
+3. run `docker compose build`
+4. run `docker compose up`
+5. Go to project folder and run `make migrationup`
+6. You can use API
+7. The API is now ready for use! Remember, the API employs CSRF protection. First, make a GET request to /csrf-token, then include the received token in the headers of your API calls as x-csrf-token: value. This is crucial as, without the correct token, you are restricted to making only GET requests.
+8. If you wan to shut down run `docker compose down`
 
 ## Testing
 

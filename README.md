@@ -54,10 +54,13 @@ A robust Car Parking Management System leveraging technologies such as Node.js, 
 ### Installation Steps
 
 1. **Clone the Repository**
+
 ```sh
 git clone https://github.com/GiorgiMakharadze/car-parking-API-nodejs-typescript.git
 ```
+
 2. Create dotenv file
+
 ```bash
  PGUSER=root
  PGPASSWORD=secret
@@ -66,7 +69,8 @@ git clone https://github.com/GiorgiMakharadze/car-parking-API-nodejs-typescript.
  MAX_LOGIN_ATTEMPTS=3
  PRIVATE_KEY=MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDdmsx8TI5W6U9/JUVpG9RGc/By6A2Cv2Ic5UeZSdv0ph9/
 ```
-2 run `docker compose build`
+
+2. run `docker compose build`
 3. run `docker compose up`
 4. Go to project folder and run `make migrationup`
 5. You can use API
@@ -77,5 +81,12 @@ git clone https://github.com/GiorgiMakharadze/car-parking-API-nodejs-typescript.
 ## Testing
 
 1. run `docker compose up`
-2. run `docker compose run test` it will run test files that file name includes .test.ts
-3. If you want do write test for that you got testing database included. Every test file name should include .test.ts
+2. add this line in docker-compose
+
+```bash
+  depends_on:
+     - test
+```
+
+3. run `docker compose run test` it will run test files that file name includes .test.ts
+4. If you want do write test for that you got testing database included. Every test file name should include .test.ts

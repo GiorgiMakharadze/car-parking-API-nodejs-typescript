@@ -16,27 +16,27 @@ A robust Car Parking Management System leveraging technologies such as Node.js, 
 
 ### 👮‍♂️ Admin Management
 
-- CRUD operations for user and parking zone management
-- Granting and revoking admin privileges
-- Viewing parking and user history
-- Fetching details of individual users
+- CRUD operations for parking zone management
+- Granting admin privileges
+- Deleting User
+- Tracking parking history and viewing all reservations
+- Fetching details of all or individual users
 
 ### 🚗 User Management
 
 - CRUD operations for vehicle management
 - Viewing owned vehicles
-- Reserving and deleting parking zones
-- Tracking parking history and viewing all reservations
+- Reserving parking zones
 - Managing individual reservation
 - Default balance setup with reservation decreasing balance functionality
 
 ### 🛡️ Security
 
-- Password hashing and reset features
-- Secure HTTP headers and rate limiting to prevent abuse
-- Defense against Cross-Site Scripting
-- Utilization of Helmet to secure Express apps by setting HTTP response headers
 - Implementation of CSRF Tokens
+- Defense against Cross-Site Scripting
+- Secure HTTP headers and rate limiting to prevent abuse
+- Utilization of Helmet to secure Express apps by setting HTTP response headers
+- Password hashing
 
 ## 💡 Getting Started
 

@@ -193,7 +193,12 @@ const userReservations = async (req: CustomRequest, res: Response) => {
  */
 const getReservation = async (req: CustomRequest, res: Response) => {
   const reservationId = parseInt(req.params.reservationId);
+  const routeUserId = parseInt(req.params.userId); // Fetch the userId from the route
   const currentUserId = req.userId;
+
+  if (currentUserId !== routeUserId) {
+    throw new UnauthorizedError("Unauthorized");
+  }
 
   const reservation = await UserRepo.findReservationById(reservationId);
 
@@ -217,7 +222,12 @@ const getReservation = async (req: CustomRequest, res: Response) => {
  */
 const deleteReservation = async (req: CustomRequest, res: Response) => {
   const reservationId = parseInt(req.params.reservationId);
+  const routeUserId = parseInt(req.params.userId);
   const currentUserId = req.userId;
+
+  if (currentUserId !== routeUserId) {
+    throw new UnauthorizedError("Unauthorized");
+  }
 
   const reservation = await UserRepo.findReservationById(reservationId);
 

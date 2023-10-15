@@ -157,7 +157,6 @@ class AdminRepo {
     return toCamelCase(rows)[0];
   }
 
-  // Parking History Methods
   /**
    * @method findAllParkingHistories
    * @description Finds all cached parking histories.
@@ -180,14 +179,7 @@ class AdminRepo {
     `;
 
     const rows = await queryWithCache(query, [], cacheKey);
-    const histories = toCamelCase(rows || []);
-    const currentTime = new Date();
-
-    histories.forEach((history) => {
-      history.status = history.endTime < currentTime ? "expired" : "active";
-    });
-
-    return histories;
+    return toCamelCase(rows || []);
   }
 }
 

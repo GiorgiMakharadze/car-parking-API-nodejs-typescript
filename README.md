@@ -8,7 +8,7 @@ A robust Car Parking Management System leveraging technologies such as Node.js, 
 
 ### 🔐 User Authentication and Authorization
 
-- User Registration, Login, Logout
+- User Registration, Login, Logout, Password Reset
 - Implementation of PASETO and CSRF for secure and stateless user authentication
 - Token refreshing and checksum
 - Role-based access control for distinguishing between Admin and User roles

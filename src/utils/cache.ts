@@ -49,7 +49,7 @@ export const queryWithCache = async (
       return redisClient.expire(cacheKey, 300);
     })
     .then(() => {
-      console.log("CACHE SET TO EXPIRE IN 10 SECONDS");
+      console.log("CACHE SET TO EXPIRE IN 5 MINUTES");
     })
     .catch((err) => {
       console.error("Error while setting cache:", err);

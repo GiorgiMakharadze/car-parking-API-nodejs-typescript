@@ -207,6 +207,25 @@ class UserRepo {
 
     return toCamelCase(rows)[0];
   }
+  /**
+   * @method updateExpiredReservations
+   * @description This method updates the status of reservations that have expired. Any reservations with an end time that has passed and are still marked as 'active' will have their status set to 'expired'. After updating, it also clears the cache for parking histories.
+   * @returns {Array} An array of updated parking histories with their status set to 'expired'.
+   */
+  static async updateExpiredReservations() {
+    const currentTime = new Date().toISOString();
+    const result = await pool.query(
+      `UPDATE parking_history SET status = 'expired' WHERE end_time <= $1 AND status = 'active' RETURNING *;`,
+      [currentTime]
+    );
+
+    const { rows } = result || { rows: [] };
+
+    const cacheKey = "parkingHistories";
+    clearCache(cacheKey);
+
+    return toCamelCase(rows);
+  }
 
   /**
    * @method updateBalance

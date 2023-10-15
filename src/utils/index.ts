@@ -13,6 +13,7 @@ import { findVehicle, findReservation } from "./userControllerRelatedFuncs";
 import { isAdmin } from "./validations/isAdmin";
 import { calculateChecksum } from "./calculateChecksum";
 import { privateKeyPEM, publicKeyPEM } from "./keyManager";
+import { startCronJobs } from "./schedulers/cronJob";
 
 export {
   adminValidation,
@@ -30,4 +31,5 @@ export {
   calculateChecksum,
   privateKeyPEM,
   publicKeyPEM,
+  startCronJobs,
 };
